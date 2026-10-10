@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户手册 · 批量二维码排版打印工具 Ver 1.0</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --panel:#fff; --line:#e3e6ec; --text:#1f2430; --sub:#6b7280;
+    --accent:#2f6bff; --accent-dark:#1f4fd8; --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+    --code-bg:#f3f5f9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Segoe UI","Microsoft YaHei",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:15px; line-height:1.8;
+  }
+  .page{max-width:900px;margin:0 auto;padding:32px 24px 80px;}
+
+  .hero{
+    background:linear-gradient(135deg,#2f6bff,#5b8cff);
+    color:#fff;border-radius:16px;padding:34px 32px;margin-bottom:28px;
+    box-shadow:0 10px 30px rgba(47,107,255,.22);
+  }
+  .hero h1{margin:0 0 8px;font-size:26px;line-height:1.35;}
+  .hero .sub{opacity:.92;font-size:14px;}
+  .hero .meta{margin-top:16px;font-size:13px;opacity:.95;line-height:1.9;}
+  .hero .meta a{color:#fff;text-decoration:underline;}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px 26px;margin-bottom:20px;
+  }
+  h2{
+    font-size:19px;margin:0 0 14px;padding-bottom:10px;
+    border-bottom:2px solid #eef2ff;display:flex;align-items:center;gap:10px;
+  }
+  h2 .n{
+    width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:none;
+  }
+  h3{font-size:16px;margin:22px 0 10px;color:var(--accent-dark);}
+  h4{font-size:14.5px;margin:16px 0 8px;}
+  p{margin:9px 0;}
+  ul,ol{margin:9px 0;padding-left:24px;}
+  li{margin:5px 0;}
+  a{color:var(--accent);}
+  code{
+    background:var(--code-bg);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-family:Consolas,"Courier New",monospace;font-size:13.5px;color:#b8295b;
+  }
+  pre{
+    background:#1f2430;color:#e6e9f0;border-radius:10px;padding:14px 16px;
+    overflow-x:auto;font-size:13.5px;line-height:1.65;
+    font-family:Consolas,"Courier New",monospace;margin:10px 0;
+  }
+  pre code{background:none;border:none;color:inherit;padding:0;}
+
+  .quick{
+    background:#f0f7ff;border:1px solid #cfe0ff;border-left:4px solid var(--accent);
+    border-radius:10px;padding:14px 18px;margin:14px 0;
+  }
+  .quick b{color:var(--accent-dark);}
+  .tip{background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid var(--ok);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px;}
+  .warn{background:#fffbeb;border:1px solid #fde68a;border-left:4px solid var(--warn);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px;}
+  .danger{background:#fef2f2;border:1px solid #fecaca;border-left:4px solid var(--danger);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px;}
+
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px;}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top;}
+  th{background:#f7f9fc;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:#fcfdff;}
+
+  .step{
+    display:flex;gap:14px;margin:16px 0;padding:14px 16px;
+    background:#fbfcfe;border:1px solid var(--line);border-radius:10px;
+  }
+  .step .idx{
+    width:30px;height:30px;flex:none;border-radius:50%;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;
+  }
+  .step .body{flex:1;min-width:0;}
+  .step .body h4{margin:2px 0 6px;font-size:15px;}
+  .step .body p:last-child{margin-bottom:0;}
+
+  .toc{
+    background:#fbfcfe;border:1px solid var(--line);border-radius:12px;padding:16px 22px;margin-bottom:22px;
+  }
+  .toc h3{margin:0 0 10px;font-size:15px;color:var(--text);}
+  .toc ol{margin:0;padding-left:22px;columns:2;column-gap:32px;}
+  .toc li{margin:4px 0;font-size:14px;}
+  @media(max-width:640px){.toc ol{columns:1;}}
+
+  .kbd{
+    display:inline-block;background:#fff;border:1px solid #c8d0dd;border-bottom-width:2px;
+    border-radius:5px;padding:0 7px;font-size:12.5px;font-family:inherit;color:var(--text);
+  }
+  .badge{display:inline-block;background:#eef3ff;color:var(--accent);border-radius:6px;padding:1px 8px;font-size:12.5px;font-weight:600;}
+
+  .footer{
+    margin-top:36px;padding-top:18px;border-top:1px solid var(--line);
+    text-align:center;font-size:13px;color:var(--sub);line-height:2;
+  }
+  .footer a{color:var(--accent);text-decoration:none;}
+  .footer a:hover{text-decoration:underline;}
+  .footer .ver{color:var(--accent);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <h1>批量二维码排版打印工具 · 用户手册</h1>
+    <div class="sub">把一堆二维码图片，自动铺满 A4 纸，一键打包下载</div>
+    <div class="meta">
+      版本：<b>Ver 1.0</b>　|　全程本地处理，图片不上传互联网　|　适用浏览器：Chrome / Edge<br>
+      E-mail：<a href="mailto:liyulai@qq.com">liyulai@qq.com</a>
+    </div>
+  </div>
+
+  <div class="toc">
+    <h3>📖 目录</h3>
+    <ol>
+      <li><a href="#s1">这个工具是干嘛的</a></li>
+      <li><a href="#s2">30 秒快速上手</a></li>
+      <li><a href="#s3">界面导览：屏幕上有哪些东西</a></li>
+      <li><a href="#s4">上传图片的 3 种方式</a></li>
+      <li><a href="#s5">调排版参数（每页放几个）</a></li>
+      <li><a href="#s6">给二维码加标题文字</a></li>
+      <li><a href="#s7">看懂预览区与缩放</a></li>
+      <li><a href="#s8">导出与 ZIP 打包</a></li>
+      <li><a href="#s9">打印：必须选「实际大小 100%」</a></li>
+      <li><a href="#s10">常见问题与排错</a></li>
+      <li><a href="#s11">术语小词典</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="card" id="s1">
+    <h2><span class="n">1</span>这个工具是干嘛的</h2>
+    <p>想象一个场景：你手上有 <b>50 张不同的二维码图片</b>，老板让你把它们打印出来，每张二维码都要印满一整页 A4 纸（重复铺满，方便剪裁分发）。</p>
+    <p>一张一张用 Word 排版，可能要花你两个小时，还容易对不齐。</p>
+    <p><b>这个工具解决的问题就是：</b>你把这 50 张图一次性丢进去，它自动帮你排好版，并且把 50 张排版好的图片打包成一个 ZIP 给你下载，整个过程几秒钟。</p>
+
+    <div class="quick">
+      <b>核心能力一句话总结：</b>
+      <ul style="margin-bottom:0;">
+        <li><b>上传几张，就导出几张</b>（一一对应，不会漏也不会多）</li>
+        <li>每张原图 → 生成 1 张 <b>A4 尺寸、重复铺满同一个二维码</b>的图片</li>
+        <li>二维码大小、间距、每页数量，你都<b>可以自己调</b></li>
+        <li>可以在图片上<b>打印标题文字</b>（比如二维码对应的门店名）</li>
+        <li>可以<b>一次导入多个文件夹</b>，每个文件夹单独打包</li>
+        <li>所有处理都在<b>你自己的电脑浏览器里完成，绝对不上传</b></li>
+      </ul>
+    </div>
+
+    <h3>它不做什么（避免误解）</h3>
+    <ul>
+      <li>❌ 不帮你生成二维码 —— 二维码图片需要你事先准备好</li>
+      <li>❌ 不帮你改二维码内容 —— 它只是把图片排版、放大的工具</li>
+      <li>❌ 不连接网络 —— 断网也能用</li>
+    </ul>
+  </div>
+
+  <!-- 2 -->
+  <div class="card" id="s2">
+    <h2><span class="n">2</span>30 秒快速上手</h2>
+    <p>如果你不想看任何解释，只照着做，那看这一段就够了：</p>
+
+    <div class="step">
+      <div class="idx">1</div>
+      <div class="body">
+        <h4>打开工具</h4>
+        <p>双击 <code>qrcode-a4-layout.html</code>，用 <b>Chrome 或 Edge</b> 打开（推荐 Chrome）。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx">2</div>
+      <div class="body">
+        <h4>上传二维码图片</h4>
+        <p>点左边的虚线方框选图片，或者直接把图片/文件夹<b>拖</b>进去。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx">3</div>
+      <div class="body">
+        <h4>（可选）调参数</h4>
+        <p>默认是「二维码 3×3cm、间距 0.5cm」。不改也能直接用。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx">4</div>
+      <div class="body">
+        <h4>点「批量导出（打包为 ZIP）」</h4>
+        <p>等进度条走完，浏览器会自动下载一个 <b>.zip</b> 压缩包。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx">5</div>
+      <div class="body">
+        <h4>解压 → 打印</h4>
+        <p>解压得到若干 PNG 图片，拿去打印。打印时<b>务必选「实际大小 100%」</b>（第 9 节详细讲）。</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      ✅ <b>就这样，完成！</b>剩下的章节是「想搞明白为什么」时再看，不看你也能用。
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card" id="s3">
+    <h2><span class="n">3</span>界面导览：屏幕上有哪些东西</h2>
+    <p>整个页面分成 <b>左、右两栏</b>，左边是「设置区」，右边是「预览区」。</p>
+
+    <h3>左栏（设置区）—— 共 4 张卡片</h3>
+    <table>
+      <thead><tr><th>卡片</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td><b>① 上传二维码图片</b></td><td>放图片的地方。可以选文件、选文件夹，或直接拖进来。</td></tr>
+        <tr><td><b>② 排版参数（单位：厘米）</b></td><td>决定二维码多大、间距多少。改这里，每页能放几个会自动重算。</td></tr>
+        <tr><td><b>⑤ 图片标题文字</b></td><td>决定要不要在输出图片上打印一行文字标题（比如门店名）。</td></tr>
+        <tr><td><b>③ 当前 A4 排版</b></td><td>显示「每页横几个、竖几个、一共几个」，以及导出文件名和导出按钮。</td></tr>
+      </tbody>
+    </table>
+    <p class="badge">注意：左侧卡片的编号顺序是 1、2、5、3，这是历史原因，不影响使用。</p>
+
+    <h3>右栏（预览区）</h3>
+    <table>
+      <thead><tr><th>区域</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td><b>④ A4 实时预览</b></td><td>一张缩小的 A4 纸效果图，你改任何参数它都会立刻刷新。</td></tr>
+        <tr><td><b>缩放工具条</b></td><td>放大 / 缩小预览，或切到「1:1 实际尺寸」。</td></tr>
+        <tr><td><b>缩略图条</b></td><td>底部一排小图，点一下切换「当前正在预览哪张」。</td></tr>
+      </tbody>
+    </table>
+    <p>页面最下方是版本与作者信息。</p>
+  </div>
+
+  <!-- 4 -->
+  <div class="card" id="s4">
+    <h2><span class="n">4</span>上传图片的 3 种方式</h2>
+    <p>三种方式<b>效果完全一样</b>，选你觉得顺手的就行。可以反复添加（多次上传会累加，不会覆盖）。</p>
+
+    <h3>方式一：选择图片文件</h3>
+    <p>点虚线框 → 在弹出的窗口里<b>按住 Ctrl 多选</b>（Mac 是 Command）→ 确定。<br>或者点上方按钮「选择图片文件」。</p>
+
+    <h3>方式二：导入整个文件夹 <span class="badge">推荐</span></h3>
+    <p>点「导入整个文件夹」按钮 → 选中一个文件夹 → 它会把文件夹里（以及子文件夹里）<b>所有图片</b>一次性收进来。</p>
+    <div class="tip">
+      💡 用这种方式导入时，工具会<b>自动按文件夹分组</b>，并在导出时按文件夹分别打包。这是最省事的方式。
+    </div>
+
+    <h3>方式三：直接拖拽</h3>
+    <p>把图片文件或整个文件夹，用鼠标<b>拖到虚线框里</b>松手即可。支持一次拖多个。</p>
+    <div class="warn">
+      ⚠️ 如果你用的是 <b>Firefox</b> 浏览器，「导入整个文件夹」按钮点了没反应（浏览器限制）。请改用<b>拖拽</b>方式，或者换 Chrome / Edge。
+    </div>
+
+    <h3>支持的图片格式</h3>
+    <p><code>JPG</code> <code>JPEG</code> <code>PNG</code> <code>WEBP</code> <code>GIF</code> <code>BMP</code> <code>AVIF</code></p>
+    <p>上传后，左栏会列出每张图片的缩略图、文件名和尺寸。不需要的可以点右边的 <b>×</b> 单独移除，或者点「清空全部」全部移除。</p>
+
+    <h3>文件夹分组是怎么回事？</h3>
+    <p>举个例子，你导入的文件夹长这样：</p>
+    <pre><code>我的二维码/
+├── 门店A/
+│   ├── a1.png
+│   └── a2.png
+├── 门店B/
+│   └── b1.png
+└── c1.png</code></pre>
+    <p>工具会分成 <b>3 组</b>：<code>我的二维码/门店A</code>、<code>我的二维码/门店B</code>、<code>我的二维码</code>（直接放着的 c1.png 归到主文件夹这组）。</p>
+    <p>导出时会按组分别打包成不同的 ZIP。如果所有图片都在同一个文件夹里，就只打包成 1 个 ZIP。</p>
+  </div>
+
+  <!-- 5 -->
+  <div class="card" id="s5">
+    <h2><span class="n">5</span>调排版参数（每页放几个）</h2>
+    <p>在「② 排版参数」卡片里，有 4 个输入框，<b>单位都是厘米</b>：</p>
+
+    <table>
+      <thead><tr><th>参数</th><th>含义</th><th>默认值</th></tr></thead>
+      <tbody>
+        <tr><td><b>二维码宽度 W</b></td><td>每个二维码在图上的宽度</td><td>3 cm</td></tr>
+        <tr><td><b>二维码高度 H</b></td><td>每个二维码在图上的高度</td><td>3 cm</td></tr>
+        <tr><td><b>横向间距</b></td><td>左右两个二维码之间的空隙</td><td>0.5 cm</td></tr>
+        <tr><td><b>纵向间距</b></td><td>上下两个二维码之间的空隙</td><td>0.5 cm</td></tr>
+      </tbody>
+    </table>
+
+    <div class="quick">
+      <b>最关键的机制：</b>你改了尺寸或间距，左上角「③ 当前 A4 排版」里的<b>横向数量、纵向数量、每页总数会自动重新计算</b>，右侧预览也会立刻变。<br>
+      你<b>不需要</b>自己算能放几个，工具会算。
+    </div>
+
+    <h3>A4 纸的可用空间是多大</h3>
+    <p>A4 纸是 <b>21 × 29.7 cm</b>。工具已经自动在四周预留了 <b>1 cm 的安全边距</b>（防止打印机裁切掉内容）。</p>
+    <p>所以真正用来放二维码的区域是 <b>19 cm 宽</b>。计算公式是：</p>
+    <pre><code>横向能放几个 = 向下取整( (19 + 横向间距) ÷ (宽度 + 横向间距) )</code></pre>
+    <p>不用背，知道「<b>间距越小、尺寸越小，就能放越多</b>」就够了。</p>
+
+    <h3>举个实际例子</h3>
+    <p>默认参数（3×3 cm，间距 0.5 cm，带标题）：</p>
+    <ul>
+      <li>横向：<b>5 个</b></li>
+      <li>纵向：<b>7 个</b></li>
+      <li>每页合计：<b>35 个</b></li>
+    </ul>
+
+    <h3>两个快捷按钮</h3>
+    <ul>
+      <li><b>恢复预设（3×3 / 间距 0.5）</b>：一键把 4 个参数调回默认值。</li>
+      <li><b>高度=宽度</b>：把高度自动设成和宽度一样的值，做出正方形二维码。二维码一般都要正方形，所以这个按钮很常用。</li>
+    </ul>
+
+    <div class="warn">
+      ⚠️ <b>如果提示「A4 放不下」怎么办？</b><br>
+      说明你填的尺寸或间距太大了。工具会自动把预览临时缩小，并弹出黄色提示。解决办法：<b>把尺寸改小，或者把间距改小</b>。
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="card" id="s6">
+    <h2><span class="n">6</span>给二维码加标题文字</h2>
+    <p>在「⑤ 图片标题文字」卡片里配置。开启后，导出的每张图片上都会打印一行文字，比如门店名。</p>
+
+    <h3>总开关</h3>
+    <p>勾选「<b>在输出图片上打印标题</b>」才会打印。不想加文字就取消勾选。</p>
+
+    <h3>标题内容从哪来</h3>
+    <table>
+      <thead><tr><th>选项</th><th>效果</th></tr></thead>
+      <tbody>
+        <tr><td><b>二维码文件名（不含扩展名）</b></td><td>用图片自己的文件名当标题。例如 <code>门店A.png</code> → 标题就是「门店A」</td></tr>
+        <tr><td><b>固定文字（所有图相同）</b></td><td>所有图片都打印同一句话，你手动输入</td></tr>
+      </tbody>
+    </table>
+
+    <h3>前缀 / 后缀（可选）</h3>
+    <p>在标题前后各加一段固定文字，很实用。例如：</p>
+    <ul>
+      <li>前缀填 <code>扫码点餐 · </code></li>
+      <li>文件名是 <code>门店A</code></li>
+      <li>最终打印出来就是：<b>扫码点餐 · 门店A</b></li>
+    </ul>
+
+    <h3>标题位置</h3>
+    <ul>
+      <li><b>顶部</b>：距纸张上边缘固定 <b>0.6 cm</b>，标题下方 0.5 cm 开始排二维码</li>
+      <li><b>底部</b>：距纸张下边缘固定 <b>0.6 cm</b>，标题上方 0.5 cm 结束排二维码</li>
+    </ul>
+
+    <h3>标题字号</h3>
+    <p>拖动滑杆调整，默认 <b>14 mm</b>，范围 2 ~ 60 mm。字号越大，标题占的高度越多，能排的二维码行数可能就少一些（工具会自动少排一行，不会重叠）。</p>
+
+    <div class="tip">
+      💡 <b>标题太长怎么办？</b>工具会自动把文字缩小到能塞进一行，不会超出纸张。但缩得太小会影响阅读，建议把文件名写短一点。
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="card" id="s7">
+    <h2><span class="n">7</span>看懂预览区与缩放</h2>
+    <p>右侧「④ A4 实时预览」永远显示<b>你当前选中的那张图</b>排好后的样子。改任何参数都会实时刷新。</p>
+
+    <h3>三个缩放按钮</h3>
+    <table>
+      <thead><tr><th>按钮</th><th>作用</th><th>什么时候用</th></tr></thead>
+      <tbody>
+        <tr><td><b>完整显示</b></td><td>整张 A4 完整显示在窗口里（默认）</td><td>看整体版面效果</td></tr>
+        <tr><td><b>1:1 实际尺寸</b></td><td>按真实纸张大小显示</td><td>想直观感受印出来多大</td></tr>
+        <tr><td><b>＋ / − 或滑杆</b></td><td>0.1 ~ 5 倍手动缩放</td><td>想放大看细节</td></tr>
+      </tbody>
+    </table>
+    <div class="warn">
+      ⚠️ 「1:1 实际尺寸」是按屏幕的物理尺寸估算的，不同显示器会有细微差异，<b>只能当参考</b>，不能当尺子用。<br>
+      真正准确的尺寸以导出的 PNG 为准（导出图已按 A4 300 DPI 生成）。
+    </div>
+
+    <h3>切换预览的是哪张图</h3>
+    <p>预览区下方有一排缩略图（<b>只有上传 2 张以上时才会出现</b>）。点哪个，上面的大预览就切换到哪个。当前选中的缩略图会有蓝色边框。</p>
+    <p>预览区标题右边会显示「当前：xxx.png」，告诉你现在看的是哪张。</p>
+
+    <h3>打印说明按钮</h3>
+    <p>点右上角「打印说明」，会弹出打印设置的关键提示。第 9 节也会详细讲。</p>
+  </div>
+
+  <!-- 8 -->
+  <div class="card" id="s8">
+    <h2><span class="n">8</span>导出与 ZIP 打包</h2>
+
+    <h3>批量导出（最常用）</h3>
+    <p>在「③ 当前 A4 排版」卡片底部，点蓝色按钮「<b>批量导出（打包为 ZIP）</b>」。</p>
+    <p>会发生什么：</p>
+    <ol>
+      <li>弹出进度窗口，显示「正在生成 (第几张 / 共几张)」</li>
+      <li>全部生成完后，自动打包并下载（进度会显示「正在打包 ZIP…」）</li>
+      <li>浏览器下载目录里出现 <b>.zip</b> 文件</li>
+    </ol>
+    <p>解压后，里面是一批 <b>PNG 图片</b>，命名规则是「<b>沿用原图文件名，只把扩展名改成 .png</b>」。例如 <code>门店A.jpg</code> → <code>门店A.png</code>。</p>
+
+    <h3>ZIP 叫什么名字？</h3>
+    <p>取决于导入了几个文件夹：</p>
+    <table>
+      <thead><tr><th>情况</th><th>ZIP 数量</th><th>命名</th></tr></thead>
+      <tbody>
+        <tr><td>只有 1 个分组</td><td>1 个</td><td><code>导出文件名.zip</code></td></tr>
+        <tr><td>有多个分组</td><td>每组 1 个</td><td><code>导出文件名-文件夹名.zip</code></td></tr>
+      </tbody>
+    </table>
+    <p>「导出文件名」这个输入框在「③ 当前 A4 排版」卡片里。导入文件夹时它会<b>自动填成文件夹名</b>，一般不用改。</p>
+    <div class="warn">
+      ⚠️ 这个输入框现在标注为「<b>导出文件名（非必要情况下不建议调整）</b>」，因为它是 ZIP 的命名依据，随便改了可能导致文件不好找。
+    </div>
+    <p>文件名里如果有 Windows 不允许的字符（<code>\ / : * ? " &lt; &gt; |</code>），会自动替换成下划线。</p>
+
+    <h3>仅导出当前预览这张</h3>
+    <p>按钮「<b>仅导出当前预览这张</b>」只导出 1 张 PNG（就是预览区正在显示的那张），不打包、不压缩。适合临时想单看一张的效果。</p>
+
+    <h3>导出时能做什么</h3>
+    <div class="danger">
+      🚫 导出过程中会弹出遮罩层，<b>请不要关闭页面、不要刷新</b>，等它自动完成。图片很多时（比如 100 张以上）会慢一些，属正常现象。
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="card" id="s9">
+    <h2><span class="n">9</span>打印：必须选「实际大小 100%」</h2>
+    <div class="danger">
+      <b>这是最容易出错的一步！</b>如果打印设置不对，印出来的二维码尺寸会偏大或偏小，导致排版全乱。
+    </div>
+
+    <h3>标准打印步骤</h3>
+    <div class="step">
+      <div class="idx">1</div>
+      <div class="body"><h4>打开要打印的 PNG 图片</h4><p>解压 ZIP，双击图片，用系统看图工具或浏览器打开。</p></div>
+    </div>
+    <div class="step">
+      <div class="idx">2</div>
+      <div class="body"><h4>按 <span class="kbd">Ctrl</span> + <span class="kbd">P</span> 调出打印对话框</h4><p>或者从菜单里选「打印」。</p></div>
+    </div>
+    <div class="step">
+      <div class="idx">3</div>
+      <div class="body">
+        <h4>关键设置（三个都要对）</h4>
+        <ul>
+          <li><b>缩放</b> 选「<b>实际大小</b>」或「<b>100%</b>」</li>
+          <li><b>关闭</b>「适应页面」「填满页面」「缩放以适合」等所有自动缩放选项</li>
+          <li><b>页边距</b> 选「<b>无</b>」（图片本身已经带 1cm 安全边距了）</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step">
+      <div class="idx">4</div>
+      <div class="body"><h4>纸张选 A4，开始打印</h4><p>方向选「纵向 / 竖版」。</p></div>
+    </div>
+
+    <h3>为什么必须 100%？</h3>
+    <p>因为导出的图片已经<b>按 A4 真实尺寸、300 DPI</b> 生成好了。图片本身就是「一张 A4 的电子版」。<br>
+    如果你让打印机「适应页面」，它可能会把图片再缩放一次，二维码就不是你设定的 3cm 了。</p>
+
+    <h3>关于 300 DPI</h3>
+    <p>DPI 是打印精度的单位，数字越大越清晰。300 DPI 是印刷行业的标准精度，打印二维码绰绰有余，不会糊。</p>
+    <p>对应的像素尺寸是 <b>2480 × 3508 像素</b>（正好是 A4 在 300 DPI 下的尺寸）。</p>
+  </div>
+
+  <!-- 10 -->
+  <div class="card" id="s10">
+    <h2><span class="n">10</span>常见问题与排错</h2>
+
+    <h4>Q1：点了「导入整个文件夹」没反应？</h4>
+    <p>大概率是用了 <b>Firefox</b> 浏览器。改用<b>拖拽文件夹</b>进去，或者换 Chrome / Edge。</p>
+
+    <h4>Q2：提示「未找到图片文件」？</h4>
+    <p>文件夹里可能没有支持格式的图片，或者图片藏在很深的子文件夹里。先确认文件夹里有 JPG / PNG 等图片。</p>
+
+    <h4>Q3：提示「A4 放不下」？</h4>
+    <p>尺寸或间距填太大了。把「二维码宽度 / 高度」调小，或把间距调小。工具会自动救急，但你最好主动改到合适值。</p>
+
+    <h4>Q4：某张图片没被导出？</h4>
+    <p>检查这张图是否损坏，或者格式不支持。另外，<b>生成失败的图会被跳过</b>，导出完成提示里的数量以成功为准。</p>
+
+    <h4>Q5：导出的二维码变形了？</h4>
+    <p>不会。工具用「<b>等比缩放</b>」方式绘制，图片比例永远不变。如果你把宽度和高度设成不一样，二维码会在格子内居中留白，而不是被拉伸。</p>
+
+    <h4>Q6：印出来二维码尺寸不对？</h4>
+    <p>99% 是打印设置问题，回到第 9 节，检查是不是选了「实际大小 100%」。</p>
+
+    <h4>Q7：图片很多，导出到一半卡住了？</h4>
+    <p>100 张左右大约需要十几秒到一分钟。不要刷新页面。如果超过 3 分钟没动静，刷新页面重试，可以分批导出（比如先导 50 张，清空后再导剩下 50 张）。</p>
+
+    <h4>Q8：上传的图片会被传到网上吗？</h4>
+    <p><b>绝对不会。</b>整个工具的代码全部在本地 HTML 文件里，没有任何网络请求。你可以断网测试。建议把 <code>qrcode-a4-layout.html</code> 放在本地文件夹，不要放到别人能访问的网络位置。</p>
+
+    <h4>Q9：手机上能用吗？</h4>
+    <p>不推荐。界面是为电脑宽屏设计的，手机屏幕太窄，操作困难。建议在电脑上使用。</p>
+
+    <h4>Q10：为什么左侧卡片编号是 1、2、5、3？</h4>
+    <p>历史遗留的编号，功能完全正常，不影响使用。<b>5 号「图片标题文字」</b>在 2 号下面，<b>3 号「当前 A4 排版」</b>在最下面。</p>
+
+    <h4>Q11：ZIP 解压出来文件名重复了？</h4>
+    <p>如果两张原图重名，工具会自动给后面加 <code>(2)</code> <code>(3)</code>，保证不覆盖。</p>
+
+    <h4>Q12：想换一台电脑用怎么办？</h4>
+    <p>直接把 <code>qrcode-a4-layout.html</code> 这一个文件复制过去即可，<b>无需安装任何软件</b>。这就是"单文件工具"的好处。</p>
+  </div>
+
+  <!-- 11 -->
+  <div class="card" id="s11">
+    <h2><span class="n">11</span>术语小词典</h2>
+    <table>
+      <thead><tr><th>词</th><th>什么意思</th></tr></thead>
+      <tbody>
+        <tr><td><b>A4</b></td><td>最常见的打印纸尺寸，21 × 29.7 厘米。本工具的输出尺寸就是 A4。</td></tr>
+        <tr><td><b>厘米 (cm)</b></td><td>长度单位，1 厘米约等于一个成年人大拇指指甲宽度。本工具所有参数单位都是厘米。</td></tr>
+        <tr><td><b>DPI</b></td><td>打印精度单位（每英寸多少个点）。本工具输出 300 DPI，是印刷级清晰度。</td></tr>
+        <tr><td><b>安全边距</b></td><td>纸张四周预留、不放内容的区域。本工具留 1 厘米，防止打印机裁切时切掉内容。</td></tr>
+        <tr><td><b>间距</b></td><td>两个二维码之间的空隙。留间距是为了方便裁剪、也更好看。</td></tr>
+        <tr><td><b>ZIP</b></td><td>一种压缩包格式，能把很多文件打包成一个文件。Windows 自带解压功能，右键 → 解压缩即可。</td></tr>
+        <tr><td><b>PNG</b></td><td>一种图片格式。本工具导出的就是 PNG，特点是线条锐利、适合二维码这种黑白图形。</td></tr>
+        <tr><td><b>缩放 / 同比缩放</b></td><td>改变大小。同比缩放就是宽高同时按比例变，不会变形。</td></tr>
+        <tr><td><b>预览</b></td><td>在真正导出之前，先在屏幕上看看效果。</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    批量二维码排版打印工具 <span class="ver">Ver 1.0</span> &nbsp;·&nbsp; Powered by Yulai @2026 &nbsp;·&nbsp; E-mail：<a href="mailto:liyulai@qq.com">liyulai@qq.com</a>
+  </div>
+
+</div>
+</body>
+</html>

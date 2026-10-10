@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二维码 A4 排版工具</title>
+<style>
+  :root{
+    --bg:#f5f6f8;
+    --panel:#ffffff;
+    --line:#e3e6ec;
+    --text:#1f2430;
+    --sub:#6b7280;
+    --accent:#2f6bff;
+    --accent-dark:#1f4fd8;
+    --ok:#16a34a;
+    --warn:#d97706;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Segoe UI","Microsoft YaHei",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .wrap{
+    display:flex;
+    align-items:flex-start;
+    gap:18px;
+    padding:18px 22px 60px;
+    flex-wrap:wrap;
+  }
+  .col-left{width:340px;min-width:300px;display:flex;flex-direction:column;gap:16px;}
+  .col-right{flex:1;min-width:360px;display:flex;flex-direction:column;gap:16px;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+  }
+  .card h2{
+    font-size:14px;
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:600;
+  }
+  .card h2 .idx{
+    width:20px;height:20px;border-radius:6px;background:#eef3ff;color:var(--accent);
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  }
+
+  /* 上传区 */
+  .drop{
+    border:2px dashed #c8d0dd;
+    border-radius:10px;
+    padding:22px 14px;
+    text-align:center;
+    color:var(--sub);
+    cursor:pointer;
+    transition:.15s;
+    background:#fafbfd;
+  }
+  .drop:hover,.drop.over{border-color:var(--accent);background:#f2f6ff;color:var(--accent);}
+  .drop strong{display:block;color:var(--text);font-size:13px;margin-bottom:4px;}
+  .drop small{font-size:12px;}
+
+  .filelist{
+    margin-top:12px;
+    max-height:300px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .fileitem{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:7px 9px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fbfcfe;
+    font-size:12.5px;
+  }
+  .fileitem img{
+    width:38px;height:38px;object-fit:contain;border-radius:5px;background:#fff;
+    border:1px solid var(--line);flex:none;
+  }
+  .fileitem .meta{flex:1;min-width:0;}
+  .fileitem .nm{
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-weight:500;
+  }
+  .fileitem .dim{color:var(--sub);font-size:11.5px;}
+  .fileitem .rm{
+    flex:none;border:none;background:transparent;color:#9aa3b2;cursor:pointer;
+    font-size:16px;line-height:1;padding:4px 6px;border-radius:5px;
+  }
+  .fileitem .rm:hover{background:#ffe8e8;color:#e03b3b;}
+
+  .empty-hint{font-size:12.5px;color:var(--sub);padding:8px 2px;}
+
+  .group-head{
+    display:flex;align-items:center;gap:8px;
+    padding:7px 4px 5px;
+    margin-top:4px;
+    font-size:12px;
+    border-bottom:1px dashed var(--line);
+    position:sticky;top:0;background:#fff;z-index:1;
+  }
+  .group-head .gname{
+    font-weight:600;color:var(--accent);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;
+  }
+  .group-head .gcount{color:var(--sub);flex:none;}
+
+  /* 参数 */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
+  .grid2 .field{margin-bottom:0;}
+  .grid2 .full{grid-column:1 / -1;}
+  .field{margin-bottom:13px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:5px;}
+  .field label b{color:var(--text);}
+  .inrow{display:flex;align-items:center;gap:8px;}
+  .inrow input[type=number]{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    outline:none;
+    transition:border-color .15s;
+    background:#fbfcfe;
+  }
+  .inrow input[type=number]:focus{border-color:var(--accent);background:#fff;}
+  .unit{font-size:12.5px;color:var(--sub);flex:none;}
+   input[type=number]::-webkit-outer-spin-button,
+   input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+
+  .preset-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .preset-row .btn{flex:1;text-align:center;}
+  .btn{
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--text);
+    padding:8px 13px;
+    border-radius:8px;
+    font-size:13px;
+    cursor:pointer;
+    transition:.15s;
+    font-family:inherit;
+  }
+  .btn:hover{border-color:#b9c3d4;background:#f7f9fc;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.primary{
+    background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;
+  }
+  .btn.primary:hover{background:var(--accent-dark);border-color:var(--accent-dark);}
+  .btn.block{display:block;width:100%;text-align:center;}
+  .btn-row{display:flex;gap:8px;margin-top:12px;}
+  .btn-row .btn{flex:1;}
+
+  /* 统计 */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .stat{
+    background:#f7f9fc;border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+  }
+  .stat .k{font-size:11.5px;color:var(--sub);margin-bottom:3px;}
+  .stat .v{font-size:19px;font-weight:700;color:var(--accent);line-height:1.2;}
+  .stat .v small{font-size:11.5px;font-weight:500;color:var(--sub);margin-left:2px;}
+
+  .notice{
+    font-size:12.5px;border-radius:8px;padding:9px 11px;margin-top:12px;
+    background:#fff8ec;border:1px solid #f3dcae;color:#8a5a06;
+  }
+  .notice.hidden{display:none;}
+  .hint-mini{font-size:11.5px;color:var(--sub);margin-top:7px;line-height:1.45;}
+
+  /* 预览 */
+  .preview-head{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .preview-head h2{margin:0;}
+  .preview-head .spacer{flex:1;}
+  .preview-head .who{font-size:12.5px;color:var(--sub);}
+  .preview-head .who b{color:var(--text);}
+
+  .stage{
+    background:#e9ecf1;
+    border-radius:10px;
+    padding:22px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    overflow:auto;
+    min-height:420px;
+  }
+  .paper{
+    background:#fff;
+    box-shadow:0 4px 18px rgba(20,30,50,.16);
+    position:relative;
+    flex:none;
+    transition:width .12s ease, height .12s ease;
+  }
+  .paper canvas{display:block;width:100%;height:100%;}
+
+  /* 缩放工具条 */
+  .zoom-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:10px 12px;
+    margin-top:12px;
+    background:#f7f9fc;
+    border:1px solid var(--line);
+    border-radius:9px;
+  }
+  .zoom-label{font-size:12.5px;color:var(--sub);}
+  .zoom-bar input[type=range]{flex:1;min-width:120px;max-width:260px;accent-color:var(--accent);}
+  .zoom-val{font-size:12.5px;color:var(--text);font-weight:600;min-width:74px;text-align:center;}
+  .zbtn{padding:5px 10px;font-size:13px;line-height:1;min-width:30px;}
+  .zbtn.wide{min-width:auto;}
+  .zbtn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+
+  .thumb-strip{
+    display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px;margin-top:14px;
+  }
+  .thumb{
+    flex:none;cursor:pointer;text-align:center;
+    border:2px solid transparent;border-radius:8px;padding:4px;
+    transition:.15s;
+  }
+  .thumb.active{border-color:var(--accent);background:#f2f6ff;}
+  .thumb canvas{
+    display:block;background:#fff;border:1px solid var(--line);border-radius:4px;
+  }
+  .thumb .nm{
+    font-size:10.5px;color:var(--sub);max-width:76px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px;
+  }
+
+  /* 进度 */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,26,40,.5);z-index:99;
+    display:none;align-items:center;justify-content:center;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:#fff;border-radius:12px;padding:24px 30px;text-align:center;min-width:260px;
+  }
+  .modal .t{font-weight:600;margin-bottom:6px;}
+  .modal .s{font-size:12.5px;color:var(--sub);}
+  .bar{height:6px;background:#eceff4;border-radius:4px;margin-top:14px;overflow:hidden;}
+  .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .1s;}
+
+  .page-footer{
+    flex-basis:100%;
+    margin:6px 0 0;
+    padding:14px 4px 4px;
+    border-top:1px solid var(--line);
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    line-height:1.7;
+  }
+  .page-footer .ver{
+    color:var(--accent);font-weight:600;
+  }
+  .page-footer a{color:var(--accent);text-decoration:none;}
+  .page-footer a:hover{text-decoration:underline;}
+
+  @media(max-width:900px){
+    .col-left{width:100%;}
+    .wrap{padding:14px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- 左侧 -->
+  <div class="col-left">
+
+    <div class="card">
+      <h2><span class="idx">1</span>上传二维码图片</h2>
+      <div class="drop" id="drop">
+        <strong>点击选择 或 拖拽图片到此处</strong>
+        <small>支持 JPG / PNG / WEBP / GIF，可多选、可多次添加；也支持整个文件夹导入</small>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <input type="file" id="dirInput" webkitdirectory directory multiple hidden>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn" id="btnPickFiles">选择图片文件</button>
+        <button class="btn" id="btnPickDir">导入整个文件夹</button>
+      </div>
+      <div class="filelist" id="fileList"></div>
+      <div class="empty-hint" id="emptyHint">尚未上传图片。上传几张，就导出几张。</div>
+      <div class="btn-row">
+        <button class="btn" id="btnClear" disabled>清空全部</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="idx">2</span>排版参数（单位：厘米）</h2>
+      <div class="grid2">
+        <div class="field">
+          <label>二维码宽度 <b>W</b></label>
+          <div class="inrow"><input type="number" id="qrW" value="3" min="0.5" max="20" step="0.1"><span class="unit">cm</span></div>
+        </div>
+        <div class="field">
+          <label>二维码高度 <b>H</b></label>
+          <div class="inrow"><input type="number" id="qrH" value="3" min="0.5" max="28" step="0.1"><span class="unit">cm</span></div>
+        </div>
+        <div class="field">
+          <label>横向间距</label>
+          <div class="inrow"><input type="number" id="gapX" value="0.5" min="0" max="10" step="0.1"><span class="unit">cm</span></div>
+        </div>
+        <div class="field">
+          <label>纵向间距</label>
+          <div class="inrow"><input type="number" id="gapY" value="0.5" min="0" max="10" step="0.1"><span class="unit">cm</span></div>
+        </div>
+      </div>
+      <div class="preset-row">
+        <button class="btn" id="btnPreset">恢复预设（3×3 / 间距 0.5）</button>
+        <button class="btn" id="btnSquare" title="高度自动等于宽度">高度=宽度</button>
+      </div>
+      <div class="notice" id="notice"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="idx">5</span>图片标题文字</h2>
+      <div class="field" style="margin-bottom:10px;">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:0;">
+          <input type="checkbox" id="titleOn" checked style="width:auto;">
+          <span>在输出图片上打印标题</span>
+        </label>
+      </div>
+      <div class="grid2">
+        <div class="field full">
+          <label>标题内容</label>
+          <select id="titleSrc" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;background:#fbfcfe;outline:none;font-family:inherit;">
+            <option value="filename">二维码文件名（不含扩展名）</option>
+            <option value="custom">固定文字（所有图相同）</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>标题前缀（可选）</label>
+          <div class="inrow"><input type="text" id="titlePrefix" value="" placeholder="如：扫码点餐 · " style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;outline:none;background:#fbfcfe;font-family:inherit;"></div>
+        </div>
+        <div class="field">
+          <label>标题后缀（可选）</label>
+          <div class="inrow"><input type="text" id="titleSuffix" value="" placeholder="如：专属二维码" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;outline:none;background:#fbfcfe;font-family:inherit;"></div>
+        </div>
+        <div class="field" id="customTitleWrap" style="display:none;">
+          <label>固定文字</label>
+          <div class="inrow"><input type="text" id="titleText" value="" placeholder="输入要打印的标题…" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;outline:none;background:#fbfcfe;font-family:inherit;"></div>
+        </div>
+        <div class="field">
+          <label>标题位置</label>
+          <div class="inrow">
+            <select id="titlePos" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;background:#fbfcfe;outline:none;font-family:inherit;">
+              <option value="top">顶部</option>
+              <option value="bottom">底部</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>标题字号 <b id="titleSizeVal">14</b> mm</label>
+          <div class="inrow"><input type="range" id="titleSize" min="2" max="60" step="0.5" value="14" style="width:100%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="idx">3</span>当前 A4 排版</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">横向数量</div><div class="v" id="sCols">—</div></div>
+        <div class="stat"><div class="k">纵向数量</div><div class="v" id="sRows">—</div></div>
+        <div class="stat"><div class="k">每页总数</div><div class="v" id="sTotal">—<small>个</small></div></div>
+        <div class="stat"><div class="k">待导出图片</div><div class="v" id="sFiles">0<small>张</small></div></div>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>导出文件名（非必要情况下不建议调整）</label>
+        <div class="inrow"><input id="pageTitle" type="text" value="二维码 A4 排版工具" placeholder="输入标题…" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;outline:none;background:#fbfcfe;font-family:inherit;"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary block" id="btnExport" disabled>批量导出（打包为 ZIP）</button>
+      </div>
+      <div class="hint-mini">支持一次导入多个文件夹：每个文件夹单独打包成一个 ZIP，命名为「导出文件名-文件夹名.zip」；单文件夹时直接用导出文件名命名。</div>
+      <div class="btn-row">
+        <button class="btn block" id="btnExportOne" disabled>仅导出当前预览这张</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右侧 -->
+  <div class="col-right">
+    <div class="card">
+      <div class="preview-head">
+        <h2><span class="idx">4</span>A4 实时预览</h2>
+        <div class="spacer"></div>
+        <span class="who">当前：<b id="curName">—</b></span>
+        <button class="btn" id="btnPrintHint">打印说明</button>
+      </div>
+      <div class="zoom-bar">
+        <span class="zoom-label">缩放</span>
+        <button class="btn zbtn" id="btnZoomOut" title="缩小">−</button>
+        <input type="range" id="zoomRange" min="0.1" max="5" step="0.05" value="1">
+        <span class="zoom-val" id="zoomVal">完整显示</span>
+        <button class="btn zbtn" id="btnZoomIn" title="放大">＋</button>
+        <button class="btn zbtn wide" id="btnZoomFit" title="自适应窗口完整显示">完整显示</button>
+        <button class="btn zbtn wide" id="btnZoomActual" title="按实际打印尺寸 1:1 显示">1:1 实际尺寸</button>
+      </div>
+      <div class="stage"><div class="paper" id="paper"></div></div>
+      <div class="thumb-strip" id="thumbStrip"></div>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <div class="page-footer">
+    批量二维码排版打印工具 <span class="ver">Ver 1.0</span> &nbsp;·&nbsp; Powered by Yulai @2026 &nbsp;·&nbsp; E-mail：<a href="mailto:liyulai@qq.com">liyulai@qq.com</a>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="t" id="ovTitle">正在导出…</div>
+    <div class="s" id="ovSub">请稍候</div>
+    <div class="bar"><i id="ovBar"></i></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ 常量 ============ */
+  const A4_W_CM = 21.0;      // A4 宽
+  const A4_H_CM = 29.7;      // A4 高
+  const MARGIN_CM = 1.0;     // 四周安全边距
+  const PRINT_DPI = 300;     // 导出分辨率
+  const PREVIEW_PX_PER_CM = 26; // 预览基准比例（每厘米像素）
+  const GAP_FALLBACK_CM = 0.3;  // 自动缩小时的保底最小间距
+  const TITLE_TOP_CM = 0.6;     // 顶部标题距上边缘的固定距离
+  const TITLE_GAP_CM = 0.5;     // 标题与最上一行二维码之间的固定距离
+  const CM_PER_INCH = 2.54;
+
+  /* ============ 状态 ============ */
+  const state = {
+    files: [],        // {id, file, name, url, img, groupId}
+    groups: [],       // {id, name, fileIds} —— 每个导入的文件夹一组，导出时各生成一个 ZIP
+    current: 0,
+    params: { w:3, h:3, gapX:0.5, gapY:0.5 },
+    title: { on:true, src:"filename", text:"", prefix:"", suffix:"", pos:"top", sizeMM:14 }, // sizeMM 标题字号（毫米）
+    zoom: { mode:"fit", factor:1 }, // fit 完整显示 | manual 手动倍数 | actual 1:1 实际尺寸
+    titleTouched: false             // 用户是否手动改过顶部标题（改过则不再用文件夹名覆盖）
+  };
+  let uid = 0;
+  let gid = 0;
+
+  /* ============ 元素 ============ */
+  const $ = (id)=>document.getElementById(id);
+  const elTitle=$("pageTitle"), elDrop=$("drop"), elInput=$("fileInput"), elDirInput=$("dirInput"),
+        elList=$("fileList"), elEmpty=$("emptyHint"), elClear=$("btnClear"),
+        elW=$("qrW"), elH=$("qrH"), elGX=$("gapX"), elGY=$("gapY"),
+        elPreset=$("btnPreset"), elSquare=$("btnSquare"), elNotice=$("notice"),
+        elTitleOn=$("titleOn"), elTitleSrc=$("titleSrc"), elTitleText=$("titleText"),
+        elTitlePrefix=$("titlePrefix"), elTitleSuffix=$("titleSuffix"),
+        elCustomTitleWrap=$("customTitleWrap"), elTitlePos=$("titlePos"),
+        elTitleSize=$("titleSize"), elTitleSizeVal=$("titleSizeVal"),
+        elCols=$("sCols"), elRows=$("sRows"), elTotal=$("sTotal"), elFiles=$("sFiles"),
+        elExport=$("btnExport"), elExportOne=$("btnExportOne"),
+        elPaper=$("paper"), elStrip=$("thumbStrip"), elCurName=$("curName"),
+        elZoomRange=$("zoomRange"), elZoomVal=$("zoomVal"),
+        elBtnZoomIn=$("btnZoomIn"), elBtnZoomOut=$("btnZoomOut"),
+        elBtnZoomFit=$("btnZoomFit"), elBtnZoomActual=$("btnZoomActual"),
+        elOverlay=$("overlay"), elOvTitle=$("ovTitle"), elOvSub=$("ovSub"), elOvBar=$("ovBar");
+
+  /* ============ 工具函数 ============ */
+  function cmToPx(cm, dpi){ return Math.round(cm / 2.54 * dpi); }
+
+  // 标题占用的可用高度（厘米）：从物理上边缘 0.6cm + 字形高(≈字号×1.16) + 与二维码行 0.5cm
+  // 注：底部仍保留 1cm 安全边距，故可用高 = A4高 − (0.6 + 字形高 + 0.5) − 1
+  function titleBandCm(){
+    const t = state.title;
+    if(!t.on) return 0;
+    if(t.src==="custom" && !String(t.text||"").trim()) return 0;
+    if(t.src==="filename" && !state.files.length) return 0;
+    const fontCm = (t.sizeMM||14)/10;
+    const glyphCm = fontCm*1.16;   // 与 titleGlyphHeight 兜底口径一致
+    return TITLE_TOP_CM + glyphCm + TITLE_GAP_CM - MARGIN_CM;
+  }
+  function calcLayout(){
+    const w=state.params.w, h=state.params.h, gx=state.params.gapX, gy=state.params.gapY;
+    const availW = A4_W_CM - MARGIN_CM*2;
+    const availH = A4_H_CM - MARGIN_CM*2 - titleBandCm();
+    let cols = (w>0) ? Math.floor((availW + gx) / (w + gx)) : 0;
+    let rows = (h>0) ? Math.floor((availH + gy) / (h + gy)) : 0;
+    cols = Math.max(0, cols);
+    rows = Math.max(0, rows);
+    return { cols, rows, total: cols*rows, availW, availH };
+  }
+
+  /* ============ 图片加载 ============ */
+  function loadImage(url){
+    return new Promise((res,rej)=>{
+      const im=new Image();
+      im.onload=()=>res(im);
+      im.onerror=()=>rej(new Error("图片加载失败"));
+      im.src=url;
+    });
+  }
+
+  function addFiles(fileArr, folderName){
+    const imgs = fileArr.filter(f=>{
+      if(f.type && f.type.startsWith("image/")) return true;
+      // 文件夹导入时部分浏览器 type 为空，兜底看扩展名
+      return /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name||"");
+    });
+    if(!imgs.length){ alert("未找到图片文件（支持 JPG / PNG / WEBP / GIF / BMP / AVIF）"); return; }
+
+    // 按所属文件夹分组：
+    //   - 图片若在「主文件夹/子文件夹X/」里 → 按子文件夹X分组
+    //   - 图片若直接在主文件夹下（无子文件夹）→ 全部归为一组，用主文件夹名
+    const groups = new Map();           // key: 相对目录路径 → 文件数组
+    imgs.forEach(f=>{
+      const key = groupKeyOf(f) || folderName || "（未命名）";
+      if(!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(f);
+    });
+
+    // 组显示名：取路径最后一段（子文件夹名）；若就是主文件夹本身则用整段
+    function displayNameOf(key){
+      const parts = key.split("/").filter(Boolean);
+      return parts.length ? parts[parts.length-1] : key;
+    }
+
+    // 逐组建立 group 对象（组名 = 文件夹名，用于导出时的 ZIP 命名）
+    const keyToGroup = new Map();
+    groups.forEach((files, key)=>{
+      const dn = displayNameOf(key);
+      // 用 key（完整目录路径）匹配已有组，避免不同主文件夹下同名子文件夹被合并
+      let g = state.groups.find(x=>x.key===key);
+      if(!g){ g = { id:++gid, name:dn, key:key, fileIds:[] }; state.groups.push(g); }
+      keyToGroup.set(key, g);
+      // 组内排序
+      files.sort((a,b)=> (a.webkitRelativePath||a.name).localeCompare(b.webkitRelativePath||b.name, "zh"));
+    });
+
+    // 首次导入且标题未被手动改过时：
+    //  本次只含 1 个分组 → 用该文件夹名；多个分组 → 用通用名（导出时会按组分别命名 ZIP）
+    if(!state.titleTouched && !state.files.length){
+      const names = [...groups.keys()].map(displayNameOf);
+      if(names.length===1){ elTitle.value = names[0]; }
+      else { elTitle.value = "二维码排版"; }
+      document.title = elTitle.value;
+    }
+
+    // 按组顺序逐个加载
+    let pending = imgs.length;
+    groups.forEach((files, key)=>{
+      const g = keyToGroup.get(key);
+      files.forEach(f=>{
+        const url = URL.createObjectURL(f);
+        loadImage(url).then(img=>{
+          const item = { id:++uid, file:f, name:f.name, url, img, groupId:g.id };
+          state.files.push(item);
+          g.fileIds.push(item.id);
+          if(--pending===0){ afterLoad(); }
+        }).catch(()=>{
+          if(--pending===0){ afterLoad(); }
+        });
+      });
+    });
+    function afterLoad(){
+      syncGroups();
+      renderFileList(); renderThumbs(); renderPreview();
+    }
+  }
+
+  // 取图片所属的「分组目录」：
+  //   webkitRelativePath = "主文件夹/子文件夹A[/更深层...]/图.png"
+  //   若存在子文件夹 → 返回 "主文件夹/子文件夹A"（按第一层子文件夹归组，更深的层级并入）
+  //   若直接在主文件夹下 → 返回 "主文件夹"
+  function groupKeyOf(f){
+    const p = f.webkitRelativePath || f._relPath || "";
+    if(!p) return "";
+    const parts = p.split("/").filter(Boolean);
+    parts.pop();                       // 去掉文件名
+    if(!parts.length) return "";
+    if(parts.length===1) return parts[0];        // 主文件夹下直接是图
+    return parts[0] + "/" + parts[1];            // 主文件夹/第一层子文件夹
+  }
+
+  // 取文件所属顶层文件夹名（兼容保留）
+  function folderOf(f){
+    const p = f.webkitRelativePath || "";
+    if(p.includes("/")) return p.split("/")[0];
+    return "";
+  }
+
+  // 清理空组 + 重新按组排列 state.files
+  function syncGroups(){
+    state.groups.forEach(g=>{ g.fileIds = g.fileIds.filter(id=>state.files.some(f=>f.id===id)); });
+    state.groups = state.groups.filter(g=>g.fileIds.length>0);
+    // 按组顺序重排 files
+    const ordered=[];
+    state.groups.forEach(g=>{
+      g.fileIds.forEach(id=>{ const it=state.files.find(f=>f.id===id); if(it) ordered.push(it); });
+    });
+    state.files = ordered;
+    if(state.current>=state.files.length) state.current=Math.max(0,state.files.length-1);
+  }
+
+  // 从 webkitRelativePath 推断顶层文件夹名（兼容旧逻辑）
+  function guessFolder(files){
+    for(const f of files){
+      const p = f.webkitRelativePath || "";
+      if(p.includes("/")) return p.split("/")[0];
+    }
+    return "";
+  }
+
+  /* ============ 渲染：文件列表（按文件夹分组） ============ */
+  function renderFileList(){
+    elList.innerHTML="";
+    elEmpty.style.display = state.files.length ? "none" : "block";
+    elClear.disabled = !state.files.length;
+    elExport.disabled = !state.files.length;
+    elExportOne.disabled = !state.files.length;
+
+    const multi = state.groups.length>1;
+    // 若存在同名组（不同主文件夹下的同名子文件夹），表头显示完整路径以便区分
+    const nameCount = {};
+    state.groups.forEach(g=>{ nameCount[g.name]=(nameCount[g.name]||0)+1; });
+    state.groups.forEach(g=>{
+      if(multi){
+        const label = nameCount[g.name]>1 && g.key ? g.key : g.name;
+        const head=document.createElement("div");
+        head.className="group-head";
+        head.innerHTML=`<span class="gname" title="${escapeAttr(label)}">📁 ${escapeHtml(label)}</span><span class="gcount">${g.fileIds.length} 张</span>`;
+        elList.appendChild(head);
+      }
+      g.fileIds.forEach(id=>{
+        const f = state.files.find(x=>x.id===id);
+        if(!f) return;
+        const d=document.createElement("div");
+        d.className="fileitem";
+        d.innerHTML=`
+          <img src="${f.url}" alt="">
+          <div class="meta">
+            <div class="nm" title="${escapeAttr(f.name)}">${escapeHtml(f.name)}</div>
+            <div class="dim">${f.img.naturalWidth}×${f.img.naturalHeight}px</div>
+          </div>
+          <button class="rm" title="移除">×</button>`;
+        d.querySelector(".rm").addEventListener("click",()=>removeFile(f.id));
+        elList.appendChild(d);
+      });
+    });
+  }
+
+  function removeFile(id){
+    const i = state.files.findIndex(f=>f.id===id);
+    if(i<0) return;
+    URL.revokeObjectURL(state.files[i].url);
+    state.files.splice(i,1);
+    syncGroups();
+    renderFileList(); renderThumbs(); renderPreview();
+  }
+
+  function clearAll(){
+    state.files.forEach(f=>URL.revokeObjectURL(f.url));
+    state.files=[]; state.groups=[]; state.current=0;
+    renderFileList(); renderThumbs(); renderPreview();
+  }
+
+  /* ============ 绘制一张 A4 铺满图 ============ */
+  // ctx 目标画布上下文；pxPerCm 每厘米像素；img 已加载的 Image；layout 布局；titleText 标题文字
+  function drawA4(ctx, img, pxPerCm, layout, titleText){
+    const W = pxPerCm*A4_W_CM, H = pxPerCm*A4_H_CM;
+    ctx.save();
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(0,0,W,H);
+
+    const m = pxPerCm*MARGIN_CM;
+
+    // 标题：距【页面物理上边缘】固定 TITLE_TOP_CM（0.6cm），不受 1cm 安全边距影响
+    const t = state.title;
+    const showTitle = t.on && titleText && String(titleText).trim().length>0;
+    let titleFontPx = 0, titleTopY = 0;
+    if(showTitle){
+      titleFontPx = Math.max(1, t.sizeMM/10 * pxPerCm);   // mm → cm → px
+      titleTopY = pxPerCm*TITLE_TOP_CM;                   // 从物理上边缘量起
+      ctx.font = "600 "+titleFontPx+"px 'Microsoft YaHei','PingFang SC',sans-serif";
+    }
+
+    // 二维码可用区：上边界 = 标题文字【实际下沿】 + 0.5cm（无标题时 = 安全边距 1cm）
+    let contentTop, contentH;
+    if(showTitle && t.pos==="top"){
+      // 用实际字形高度，而不是 fontPx*1.35 的行高估算，避免多余空白
+      const glyphH = titleGlyphHeight(ctx, titleFontPx);
+      contentTop = titleTopY + glyphH + pxPerCm*TITLE_GAP_CM;
+      contentH = A4_H_CM*pxPerCm - contentTop - m;        // 下方仍留 1cm 安全边距
+    }else if(showTitle && t.pos==="bottom"){
+      const glyphH = titleGlyphHeight(ctx, titleFontPx);
+      contentTop = m;
+      const titleTopEdge = A4_H_CM*pxPerCm - pxPerCm*TITLE_TOP_CM - glyphH;
+      contentH = titleTopEdge - pxPerCm*TITLE_GAP_CM - m;
+    }else{
+      contentTop = m;
+      contentH = A4_H_CM*pxPerCm - m*2;
+    }
+    const contentW = A4_W_CM*pxPerCm - m*2;
+
+    const w = pxPerCm*state.params.w;
+    const h = pxPerCm*state.params.h;
+    const gx= pxPerCm*state.params.gapX;
+    const gy= pxPerCm*state.params.gapY;
+    const { cols, rows } = layout;
+
+    // 网格对齐：水平居中；垂直【靠上对齐】——首行紧贴标题下 0.5cm，余量全留底部
+    const usedW = cols>0 ? cols*w + (cols-1)*gx : 0;
+    const usedH = rows>0 ? rows*h + (rows-1)*gy : 0;
+    const offX = m + Math.max(0,(contentW-usedW)/2);
+    const offY = contentTop;   // 靠上，不再垂直居中
+
+    ctx.imageSmoothingQuality="high";
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const x = offX + c*(w+gx);
+        const y = offY + r*(h+gy);
+        drawContain(ctx, img, x, y, w, h);
+      }
+    }
+
+    // 绘制标题
+    if(showTitle){
+      ctx.fillStyle="#000000";
+      ctx.textAlign="center";
+      ctx.textBaseline = "top";
+      ctx.font = "600 "+titleFontPx+"px 'Microsoft YaHei','PingFang SC',sans-serif";
+      const maxW = contentW;
+      const oneLine = fitSingleLine(ctx, String(titleText), maxW);
+      const cx = W/2;
+      const topY = (t.pos==="top")
+        ? pxPerCm*TITLE_TOP_CM                            // 顶部：距【物理上边缘】固定 0.6cm
+        : H - pxPerCm*TITLE_TOP_CM - titleGlyphHeight(ctx, titleFontPx);  // 底部：距【物理下边缘】固定 0.6cm
+      ctx.fillText(oneLine, cx, topY, maxW);
+    }
+    ctx.restore();
+  }
+
+  // 标题文字的实际字形高度（避开行高估算带来的多余空白）
+  //   textBaseline="top" 时，字形顶端从 y 往下约 actualBoundingBoxAscent 处开始，
+  //   视觉底边 ≈ actualBoundingBoxAscent + actualBoundingBoxDescent
+  function titleGlyphHeight(ctx, fontPx){
+    const prevFont = ctx.font;
+    const m = ctx.measureText("中文Ag");
+    let h = 0;
+    if(m.actualBoundingBoxAscent!==undefined){
+      h = m.actualBoundingBoxAscent + (m.actualBoundingBoxDescent||0);
+    }
+    ctx.font = prevFont;
+    if(!h || !isFinite(h)) h = fontPx*1.16;   // 兜底：近似汉字字面高
+    return h;
+  }
+
+  // 标题过长时按需缩字号（单行放下），保持可读
+  function fitSingleLine(ctx, text, maxW){
+    const base = ctx.font;
+    const m = base.match(/(\d+(?:\.\d+)?)px/);
+    const size = m ? parseFloat(m[1]) : 20;
+    let s = size;
+    for(let i=0;i<40 && ctx.measureText(text).width>maxW && s>8;i++){
+      s *= 0.95;
+      ctx.font = base.replace(/(\d+(?:\.\d+)?)px/, s+"px");
+    }
+    return text;
+  }
+
+  // 保持比例（contain）居中绘制
+  function drawContain(ctx,img,x,y,bw,bh){
+    const iw=img.naturalWidth, ih=img.naturalHeight;
+    if(!iw||!ih) return;
+    const s = Math.min(bw/iw, bh/ih);
+    const dw = iw*s, dh = ih*s;
+    const dx = x+(bw-dw)/2, dy = y+(bh-dh)/2;
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
+
+  /* ============ 渲染：主预览 ============ */
+  function renderPreview(){
+    elPaper.innerHTML="";
+
+    if(!state.files.length){
+      elCurName.textContent="—";
+      setStats(0,0,0);
+      const ph=document.createElement("div");
+      ph.style.cssText="padding:60px 40px;color:#9aa3b2;font-size:13px;text-align:center;";
+      ph.textContent="上传图片后在此显示 A4 排版预览";
+      elPaper.appendChild(ph);
+      return;
+    }
+
+    const lay = resolveLayout();
+    const f = state.files[state.current];
+    elCurName.textContent = f.name;
+
+    const pxPerCm = PREVIEW_PX_PER_CM;
+    const cv = document.createElement("canvas");
+    cv.width = Math.round(pxPerCm*A4_W_CM);
+    cv.height= Math.round(pxPerCm*A4_H_CM);
+    elPaper.appendChild(cv);
+    drawA4(cv.getContext("2d"), f.img, pxPerCm, lay, titleForFile(f));
+
+    setStats(lay.cols, lay.rows, lay.total);
+    applyZoom();
+  }
+
+  /* ============ 预览缩放 ============ */
+  // 计算预览应显示的像素宽度
+  function zoomWidthPx(){
+    const z = state.zoom;
+    if(z.mode==="actual"){
+      // 1:1 实际尺寸：CSS 的标准物理单位换算 96px = 1in = 2.54cm
+      return (A4_W_CM/CM_PER_INCH)*96;
+    }
+    if(z.mode==="manual"){
+      // 手动倍数：以「完整显示」的尺寸为 1 倍基准
+      return fitWidthPx()*z.factor;
+    }
+    return fitWidthPx(); // fit
+  }
+
+  // 「完整显示」时纸张应占的像素宽度（按舞台可视区计算）
+  function fitWidthPx(){
+    const stage = document.querySelector(".stage");
+    if(!stage) return 400;
+    const pad = 44;                     // stage 内边距
+    const avail = Math.max(160, stage.clientWidth - pad);
+    // 同时不要让高度超出可视高度太多
+    const availH = Math.max(160, (window.innerHeight - 220));
+    const byW = avail;
+    const byH = availH * (A4_W_CM/A4_H_CM);
+    return Math.min(byW, byH);
+  }
+
+  function applyZoom(){
+    const cv = elPaper.querySelector("canvas");
+    if(!cv) return;
+    const targetW = zoomWidthPx();
+    // canvas 以 CSS 宽高显示（内部像素不变，浏览器做缩放）
+    elPaper.style.width = targetW + "px";
+    elPaper.style.height = (targetW*A4_H_CM/A4_W_CM) + "px";
+
+    // 同步 UI
+    const pct = targetW / fitWidthPx();
+    if(state.zoom.mode==="actual"){
+      elZoomVal.textContent = "1:1 实际";
+      elZoomRange.value = Math.min(5, Math.max(0.1, pct));
+    }else if(state.zoom.mode==="fit"){
+      elZoomVal.textContent = "完整显示";
+      elZoomRange.value = Math.min(5, Math.max(0.1, pct));
+    }else{
+      elZoomVal.textContent = state.zoom.factor.toFixed(2)+"×";
+    }
+    elBtnZoomFit.classList.toggle("active", state.zoom.mode==="fit");
+    elBtnZoomActual.classList.toggle("active", state.zoom.mode==="actual");
+  }
+
+  function setZoomMode(mode){
+    state.zoom.mode = mode;
+    if(mode==="manual" && !state.zoom.factor) state.zoom.factor = 1;
+    applyZoom();
+  }
+  function setZoomFactor(f){
+    state.zoom.factor = Math.min(5, Math.max(0.1, f));
+    state.zoom.mode = "manual";
+    applyZoom();
+  }
+
+  // 解析布局：若放不下则自动缩小尺寸/间距，保证至少 1 个
+  function resolveLayout(){
+    let lay = calcLayout();
+    if(lay.total>=1){
+      updateNotice("");
+      return lay;
+    }
+    // 放不下 → 计算自动缩放
+    let w=state.params.w, h=state.params.h, gx=state.params.gapX, gy=state.params.gapY;
+    const oldW=w, oldH=h;
+    const availW=A4_W_CM-MARGIN_CM*2, availH=A4_H_CM-MARGIN_CM*2-titleBandCm();
+    // 逐步缩小直到放下
+    for(let i=0;i<80 && (Math.floor((availW+gx)/(w+gx))<1 || Math.floor((availH+gy)/(h+gy))<1); i++){
+      if(Math.floor((availW+gx)/(w+gx))<1){ w*=0.95; if(gx>GAP_FALLBACK_CM) gx*=0.95; }
+      if(Math.floor((availH+gy)/(h+gy))<1){ h*=0.95; if(gy>GAP_FALLBACK_CM) gy*=0.95; }
+    }
+    const cols=Math.max(1,Math.floor((availW+gx)/(w+gx)));
+    const rows=Math.max(1,Math.floor((availH+gy)/(h+gy)));
+    updateNotice(`⚠️ 按当前尺寸（${oldW}×${oldH}cm）A4 放不下，预览已临时缩小显示（${w.toFixed(2)}×${h.toFixed(2)}cm）。导出时会按可放下的尺寸自适应，请调小尺寸或间距。`);
+    return { cols, rows, total:cols*rows, availW, availH, w, h, gx, gy, scaled:true };
+  }
+
+  function setStats(c,r,t){
+    elCols.textContent = c||0;
+    elRows.textContent = r||0;
+    elTotal.innerHTML = (t||0)+'<small>个</small>';
+    elFiles.innerHTML = state.files.length+'<small>张</small>';
+  }
+
+  function updateNotice(msg){
+    if(msg){ elNotice.textContent=msg; elNotice.classList.remove("hidden"); }
+    else { elNotice.classList.add("hidden"); }
+  }
+
+  /* ============ 渲染：缩略图条 ============ */
+  function renderThumbs(){
+    elStrip.innerHTML="";
+    if(state.files.length<=1) return;
+    state.files.forEach((f,i)=>{
+      const d=document.createElement("div");
+      d.className="thumb"+(i===state.current?" active":"");
+      const cv=document.createElement("canvas");
+      const tw=68, th=Math.round(tw*A4_H_CM/A4_W_CM);
+      cv.width=tw; cv.height=th;
+      const ctx=cv.getContext("2d");
+      ctx.fillStyle="#fff"; ctx.fillRect(0,0,tw,th);
+      const lay=resolveLayout();
+      drawA4(ctx,f.img,tw/A4_W_CM,lay,titleForFile(f));
+      d.appendChild(cv);
+      const n=document.createElement("div"); n.className="nm"; n.title=f.name; n.textContent=f.name;
+      d.appendChild(n);
+      d.addEventListener("click",()=>{ state.current=i; renderThumbs(); renderPreview(); });
+      elStrip.appendChild(d);
+    });
+  }
+
+  /* ============ 导出 ============ */
+  function renderFull(f){
+    const img = f.img;
+    const lay = resolveLayout();
+    const useW = lay.scaled ? lay.w : state.params.w;
+    const useH = lay.scaled ? lay.h : state.params.h;
+    const useGX = lay.scaled ? lay.gx : state.params.gapX;
+    const useGY = lay.scaled ? lay.gy : state.params.gapY;
+
+    const pxPerCm = PRINT_DPI/2.54;
+    const cv=document.createElement("canvas");
+    cv.width  = cmToPx(A4_W_CM, PRINT_DPI);
+    cv.height = cmToPx(A4_H_CM, PRINT_DPI);
+    const ctx=cv.getContext("2d");
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height);
+
+    const t=state.title;
+    const titleText = titleForFile(f);
+    const showTitle = t.on && !!titleText.trim();
+    let titleFontPx=0, titleTopY=0;
+    if(showTitle){
+      titleFontPx = Math.max(1, t.sizeMM/10 * pxPerCm);
+      titleTopY = pxPerCm*TITLE_TOP_CM;                    // 距物理上边缘 0.6cm
+      ctx.font = "600 "+titleFontPx+"px 'Microsoft YaHei','PingFang SC',sans-serif";
+    }
+
+    const m=pxPerCm*MARGIN_CM;
+    let contentTop, contentH;
+    if(showTitle && t.pos==="top"){
+      const glyphH = titleGlyphHeight(ctx, titleFontPx);
+      contentTop = titleTopY + glyphH + pxPerCm*TITLE_GAP_CM;
+      contentH = pxPerCm*A4_H_CM - contentTop - m;
+    }else if(showTitle && t.pos==="bottom"){
+      const glyphH = titleGlyphHeight(ctx, titleFontPx);
+      contentTop = m;
+      const titleTopEdge = pxPerCm*(A4_H_CM-TITLE_TOP_CM) - glyphH;
+      contentH = titleTopEdge - pxPerCm*TITLE_GAP_CM - m;
+    }else{
+      contentTop = m;
+      contentH = pxPerCm*(A4_H_CM-MARGIN_CM*2);
+    }
+    const contentW = pxPerCm*(A4_W_CM-MARGIN_CM*2);
+
+    const w=pxPerCm*useW, h=pxPerCm*useH;
+    const gx=pxPerCm*useGX, gy=pxPerCm*useGY;
+    const cols=lay.cols, rows=lay.rows;
+    const usedW=cols>0?cols*w+(cols-1)*gx:0, usedH=rows>0?rows*h+(rows-1)*gy:0;
+    const offX=m+Math.max(0,(contentW-usedW)/2), offY=contentTop;   // 水平居中；垂直靠上
+
+    ctx.imageSmoothingQuality="high";
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        drawContain(ctx,img, offX+c*(w+gx), offY+r*(h+gy), w, h);
+      }
+    }
+
+    if(showTitle){
+      ctx.fillStyle="#000000";
+      ctx.textAlign="center";
+      ctx.textBaseline = "top";
+      ctx.font = "600 "+titleFontPx+"px 'Microsoft YaHei','PingFang SC',sans-serif";
+      const oneLine = fitSingleLine(ctx, titleText, contentW);
+      const cx = cv.width/2;
+      const topY = (t.pos==="top")
+        ? pxPerCm*TITLE_TOP_CM                             // 距【物理上边缘】0.6cm
+        : cv.height - pxPerCm*TITLE_TOP_CM - titleGlyphHeight(ctx, titleFontPx);
+      ctx.fillText(oneLine, cx, topY, contentW);
+    }
+    return cv;
+  }
+
+  function baseName(name){
+    const i=name.lastIndexOf(".");
+    return i>0 ? name.slice(0,i) : name;
+  }
+
+  // 解析某张图应打印的标题文字
+  function titleForFile(file){
+    const t=state.title;
+    if(!t.on) return "";
+    const base = (t.src==="custom") ? String(t.text||"") : (file ? baseName(file.name) : "");
+    return (t.prefix||"") + base + (t.suffix||"");
+  }
+
+  function canvasToBlob(cv){
+    return new Promise(res=>cv.toBlob(b=>res(b),"image/png",1.0));
+  }
+
+  async function exportAll(){
+    if(!state.files.length) return;
+    showOverlay("正在导出…","准备中");
+    const list = state.files.slice();
+
+    // 先把所有图渲染成 PNG 数据（带组信息）
+    const rendered = [];
+    for(let i=0;i<list.length;i++){
+      const f=list[i];
+      setOverlay(`正在生成 (${i+1}/${list.length})`, f.name, (i/list.length)*88);
+      const cv=renderFull(f);
+      const blob=await canvasToBlob(cv);
+      const buf=new Uint8Array(await blob.arrayBuffer());
+      rendered.push({ name: baseName(f.name)+".png", data: buf, groupId: f.groupId });
+    }
+
+    const multi = state.groups.length>1;
+    const titleBase = (elTitle.value || "二维码排版").trim() || "二维码排版";
+    const safe = (s)=>String(s).replace(/[\\/:*?"<>|]/g,"_").trim() || "未命名";
+
+    if(!multi){
+      // 单组：一个 ZIP，用导出文件名命名（保持原行为）
+      setOverlay("正在打包 ZIP…","请稍候",92);
+      const zipBlob = await buildZip(rendered);
+      const zipName = safe(titleBase)+".zip";
+      downloadBlob(zipBlob, zipName);
+      setOverlay("导出完成", `已打包 ${rendered.length} 张 → ${zipName}`, 100);
+      await sleep(600);
+      hideOverlay();
+      return;
+    }
+
+    // 多组：每组一个 ZIP，用「导出文件名-文件夹名」命名
+    const usedZip=new Set();
+    let idx=0;
+    for(const g of state.groups){
+      const items = rendered.filter(r=>r.groupId===g.id);
+      if(!items.length) continue;
+      idx++;
+      setOverlay(`正在打包第 ${idx}/${state.groups.length} 个 ZIP…`, g.name, 88+ (idx-1)/state.groups.length*12);
+      const zipBlob = await buildZip(items);
+      let zipName = safe(titleBase+"-"+g.name)+".zip";
+      if(usedZip.has(zipName)){
+        let n=2; while(usedZip.has(safe(titleBase+"-"+g.name)+"("+n+").zip")) n++;
+        zipName = safe(titleBase+"-"+g.name)+"("+n+").zip";
+      }
+      usedZip.add(zipName);
+      downloadBlob(zipBlob, zipName);
+      await sleep(350);   // 多文件下载间隔，避免被浏览器拦截
+    }
+
+    setOverlay("导出完成", `共 ${state.groups.length} 个文件夹 → ${usedZip.size} 个 ZIP`, 100);
+    await sleep(700);
+    hideOverlay();
+  }
+
+  /* ============ ZIP 打包（无第三方库） ============ */
+  // 使用浏览器原生 CompressionStream('deflate-raw') 压缩；不支持时回退为存储模式
+  const CRC_TABLE = (()=>{
+    const t=new Uint32Array(256);
+    for(let n=0;n<256;n++){
+      let c=n;
+      for(let k=0;k<8;k++) c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+      t[n]=c>>>0;
+    }
+    return t;
+  })();
+  function crc32(buf){
+    let c=0xFFFFFFFF;
+    for(let i=0;i<buf.length;i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c>>>8);
+    return (c ^ 0xFFFFFFFF)>>>0;
+  }
+  async function deflateRaw(buf){
+    if(typeof CompressionStream==="undefined") return null;
+    try{
+      const cs=new CompressionStream("deflate-raw");
+      const w=cs.writable.getWriter();
+      w.write(buf); w.close();
+      const ab=await new Response(cs.readable).arrayBuffer();
+      return new Uint8Array(ab);
+    }catch(e){ return null; }
+  }
+  // 本地时间 → DOS 时间/日期
+  function dosDateTime(d){
+    const time = ((d.getHours()<<11) | (d.getMinutes()<<5) | (d.getSeconds()/2)) & 0xFFFF;
+    const date = (((d.getFullYear()-1980)<<9) | ((d.getMonth()+1)<<5) | d.getDate()) & 0xFFFF;
+    return { time, date };
+  }
+  function u16(n){ return new Uint8Array([n & 0xFF, (n>>>8) & 0xFF]); }
+  function u32(n){ n=n>>>0; return new Uint8Array([n & 0xFF, (n>>>8)&0xFF, (n>>>16)&0xFF, (n>>>24)&0xFF]); }
+
+  async function buildZip(entries){
+    const enc=new TextEncoder();
+    const localParts=[], centralParts=[];
+    let offset=0;
+    const now=dosDateTime(new Date());
+    const usedNames=new Set();
+
+    for(const e of entries){
+      // 文件名去重
+      let name=e.name;
+      if(usedNames.has(name)){
+        const dot=name.lastIndexOf(".");
+        const base=dot>0?name.slice(0,dot):name, ext=dot>0?name.slice(dot):"";
+        let n=2; while(usedNames.has(base+"("+n+")"+ext)) n++;
+        name=base+"("+n+")"+ext;
+      }
+      usedNames.add(name);
+
+      const nameBytes=enc.encode(name);
+      const data=e.data;
+      const crc=crc32(data);
+      const comp=await deflateRaw(data);
+      const method = comp ? 8 : 0;
+      const stored = comp || data;
+      const csize=stored.length, usize=data.length;
+
+      // 本地文件头
+      const lh=[];
+      lh.push(u32(0x04034b50));
+      lh.push(u16(20));           // version needed
+      lh.push(u16(0x0800));       // flag: UTF-8
+      lh.push(u16(method));
+      lh.push(u16(now.time), u16(now.date));
+      lh.push(u32(crc), u32(csize), u32(usize));
+      lh.push(u16(nameBytes.length), u16(0));
+      lh.push(nameBytes);
+      const localHead=concat(lh);
+      localParts.push(localHead, stored);
+
+      // 中央目录
+      const ch=[];
+      ch.push(u32(0x02014b50));
+      ch.push(u16(20), u16(20));
+      ch.push(u16(0x0800));
+      ch.push(u16(method));
+      ch.push(u16(now.time), u16(now.date));
+      ch.push(u32(crc), u32(csize), u32(usize));
+      ch.push(u16(nameBytes.length), u16(0), u16(0));
+      ch.push(u16(0), u16(0), u32(0));
+      ch.push(u32(offset));
+      ch.push(nameBytes);
+      centralParts.push(concat(ch));
+
+      offset += localHead.length + stored.length;
+    }
+
+    const central=concat(centralParts);
+    const eocd=[];
+    eocd.push(u32(0x06054b50));
+    eocd.push(u16(0), u16(0));
+    eocd.push(u16(entries.length), u16(entries.length));
+    eocd.push(u32(central.length), u32(offset));
+    eocd.push(u16(0));
+    const eocdBytes=concat(eocd);
+
+    return new Blob([...localParts, central, eocdBytes], {type:"application/zip"});
+  }
+  function concat(arrs){
+    let len=0; for(const a of arrs) len+=a.length;
+    const out=new Uint8Array(len);
+    let p=0; for(const a of arrs){ out.set(a,p); p+=a.length; }
+    return out;
+  }
+
+  async function exportOne(){
+    if(!state.files.length) return;
+    const f=state.files[state.current];
+    showOverlay("正在导出…", f.name);
+    const cv=renderFull(f);
+    const blob=await canvasToBlob(cv);
+    downloadBlob(blob, baseName(f.name)+".png");
+    setOverlay("导出完成","",100);
+    await sleep(350);
+    hideOverlay();
+  }
+
+  function downloadBlob(blob, filename){
+    const a=document.createElement("a");
+    const u=URL.createObjectURL(blob);
+    a.href=u; a.download=filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(u); a.remove(); }, 1500);
+  }
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+  function showOverlay(t,s){ elOvTitle.textContent=t; elOvSub.textContent=s||""; elOvBar.style.width="0%"; elOverlay.classList.add("show"); }
+  function setOverlay(t,s,p){ elOvTitle.textContent=t; if(s!==undefined)elOvSub.textContent=s; if(p!==undefined)elOvBar.style.width=p+"%"; }
+  function hideOverlay(){ elOverlay.classList.remove("show"); }
+
+  /* ============ 转义 ============ */
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
+
+  /* ============ 事件绑定 ============ */
+  elDrop.addEventListener("click",()=>elInput.click());
+  elInput.addEventListener("change",e=>{ addFiles(Array.from(e.target.files)); elInput.value=""; });
+  elDirInput.addEventListener("change",e=>{
+    const arr=Array.from(e.target.files);
+    const folder = arr.length ? guessFolder(arr) : "";
+    addFiles(arr, folder);
+    elDirInput.value="";
+  });
+  $("btnPickFiles").addEventListener("click",()=>elInput.click());
+  $("btnPickDir").addEventListener("click",()=>elDirInput.click());
+  elDrop.addEventListener("dragover",e=>{ e.preventDefault(); elDrop.classList.add("over"); });
+  elDrop.addEventListener("dragleave",()=>elDrop.classList.remove("over"));
+  elDrop.addEventListener("drop",e=>{
+    e.preventDefault(); elDrop.classList.remove("over");
+    // 优先用 webkitGetAsEntry 递归读取拖入的文件夹
+    const items = e.dataTransfer.items;
+    if(items && items.length && items[0].webkitGetAsEntry){
+      const entries=[];
+      for(const it of items){
+        const en = it.webkitGetAsEntry && it.webkitGetAsEntry();
+        if(en) entries.push(en);
+      }
+      if(entries.some(en=>en.isDirectory)){
+        collectFromEntries(entries).then(files=>{
+          if(files.length){
+            const folder = (entries.find(en=>en.isDirectory)||{}).name || guessFolder(files);
+            addFiles(files, folder);
+          }
+        });
+        return;
+      }
+    }
+    if(e.dataTransfer.files) addFiles(Array.from(e.dataTransfer.files));
+  });
+
+  // 递归收集拖入的文件夹内所有图片文件，并补上相对路径（模拟 webkitRelativePath）
+  function collectFromEntries(entries){
+    const out=[];
+    function walk(entry, prefix){
+      return new Promise(res=>{
+        if(entry.isFile){
+          entry.file(f=>{
+            // File 不可写 webkitRelativePath；用一份浅拷贝包装并挂上自定义字段
+            try{
+              Object.defineProperty(f, "webkitRelativePath", { value: prefix + entry.name, configurable:true });
+            }catch(e){ f._relPath = prefix + entry.name; }
+            out.push(f); res();
+          }, ()=>res());
+        }else if(entry.isDirectory){
+          const rd=entry.createReader();
+          const readBatch=()=>{
+            rd.readEntries(batch=>{
+              if(!batch.length){ res(); return; }
+              Promise.all(batch.map(en=>walk(en, prefix + entry.name + "/"))).then(readBatch);
+            }, ()=>res());
+          };
+          readBatch();
+        }else res();
+      });
+    }
+    return Promise.all(entries.map(en=>walk(en, ""))).then(()=>out);
+  }
+  elClear.addEventListener("click",clearAll);
+
+  // 标题控件
+  function syncTitleUI(){
+    elCustomTitleWrap.style.display = (elTitleSrc.value==="custom") ? "block" : "none";
+    elTitleSizeVal.textContent = elTitleSize.value;
+  }
+  function readTitle(){
+    state.title.on = elTitleOn.checked;
+    state.title.src = elTitleSrc.value;
+    state.title.text = elTitleText.value;
+    state.title.prefix = elTitlePrefix.value;
+    state.title.suffix = elTitleSuffix.value;
+    state.title.pos = elTitlePos.value;
+    state.title.sizeMM = parseFloat(elTitleSize.value)||14;
+  }
+  function onTitleChange(){
+    readTitle(); syncTitleUI();
+    renderPreview();
+    if(state.files.length>1) renderThumbs();
+  }
+  elTitleOn.addEventListener("change", onTitleChange);
+  elTitleSrc.addEventListener("change", onTitleChange);
+  elTitlePos.addEventListener("change", onTitleChange);
+  elTitleSize.addEventListener("input", ()=>{ elTitleSizeVal.textContent=elTitleSize.value; onTitleChange(); });
+  elTitleText.addEventListener("input", onTitleChange);
+  elTitlePrefix.addEventListener("input", onTitleChange);
+  elTitleSuffix.addEventListener("input", onTitleChange);
+
+  // 参数
+  function readParams(){
+    state.params.w  = clampNum(elW.value, 0.5, 20, 3);
+    state.params.h  = clampNum(elH.value, 0.5, 28, 3);
+    state.params.gapX=clampNum(elGX.value, 0, 10, 0.5);
+    state.params.gapY=clampNum(elGY.value, 0, 10, 0.5);
+  }
+  function clampNum(v,min,max,def){
+    let n=parseFloat(v);
+    if(isNaN(n)) n=def;
+    return Math.min(max, Math.max(min, n));
+  }
+  function onParamChange(){
+    readParams();
+    elCols && null;
+    renderPreview();
+    if(state.files.length>1) renderThumbs();
+  }
+  [elW,elH,elGX,elGY].forEach(el=>{
+    el.addEventListener("input", onParamChange);
+    el.addEventListener("change", ()=>{
+      // 失焦时回写规范化后的值
+      const map={qrW:"w",qrH:"h",gapX:"gapX",gapY:"gapY"};
+      el.value = state.params[map[el.id]];
+      onParamChange();
+    });
+  });
+
+  elPreset.addEventListener("click",()=>{
+    elW.value=3; elH.value=3; elGX.value=0.5; elGY.value=0.5;
+    readParams(); renderPreview(); if(state.files.length>1) renderThumbs();
+  });
+  elSquare.addEventListener("click",()=>{
+    elH.value = elW.value || 3;
+    readParams(); renderPreview(); if(state.files.length>1) renderThumbs();
+  });
+
+  elExport.addEventListener("click", exportAll);
+  elExportOne.addEventListener("click", exportOne);
+
+  // 预览缩放
+  elZoomRange.addEventListener("input",()=>setZoomFactor(parseFloat(elZoomRange.value)||1));
+  elBtnZoomIn.addEventListener("click",()=>setZoomFactor((state.zoom.mode==="manual"?state.zoom.factor:currentFitPct())+0.1));
+  elBtnZoomOut.addEventListener("click",()=>setZoomFactor((state.zoom.mode==="manual"?state.zoom.factor:currentFitPct())-0.1));
+  elBtnZoomFit.addEventListener("click",()=>setZoomMode("fit"));
+  elBtnZoomActual.addEventListener("click",()=>setZoomMode("actual"));
+  // 舞台尺寸变化时，若处于完整显示模式则自适应
+  window.addEventListener("resize",()=>{ if(state.zoom.mode==="fit") applyZoom(); });
+
+  function currentFitPct(){
+    if(!state.zoom.factor) return 1;
+    return state.zoom.mode==="manual" ? state.zoom.factor : 1;
+  }
+
+  elTitle.addEventListener("input",()=>{
+    state.titleTouched = true;   // 手动改过 → 后续导入不再用文件夹名覆盖
+  });
+
+  $("btnPrintHint").addEventListener("click",()=>{
+    alert("打印设置说明：\n\n1. 打印「导出的 PNG 图片」或本页预览时，务必在打印对话框中选择：\n   • 缩放：实际大小 / 100%\n   • 关闭「适应页面」「填满页面」等自动缩放\n   • 页边距：无（图片本身已含 1cm 安全边距）\n\n2. 实际尺寸已按 A4（21×29.7cm）300DPI 生成，四周预留 1cm 安全边距，1:1 打印即可得到准确尺寸。\n\n3. 预览里的「1:1 实际尺寸」按 96dpi 屏幕物理单位显示，仅作参考；不同显示器物理尺寸会有细微差异。");
+  });
+
+  /* ============ 初始化 ============ */
+  readParams();
+  readTitle();
+  syncTitleUI();
+  renderPreview();
+  renderFileList();
+
+})();
+</script>
+</body>
+</html>

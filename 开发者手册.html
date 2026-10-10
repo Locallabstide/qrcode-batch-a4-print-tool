@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开发者手册 · 批量二维码排版打印工具 Ver 1.0</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --panel:#fff; --line:#e3e6ec; --text:#1f2430; --sub:#6b7280;
+    --accent:#2f6bff; --accent-dark:#1f4fd8; --ok:#16a34a; --warn:#d97706; --danger:#dc2626;
+    --code-bg:#f3f5f9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Segoe UI","Microsoft YaHei",-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:15px; line-height:1.8;
+  }
+  .page{max-width:1000px;margin:0 auto;padding:32px 24px 80px;}
+
+  .hero{
+    background:linear-gradient(135deg,#1e2a44,#2f6bff);
+    color:#fff;border-radius:16px;padding:34px 32px;margin-bottom:28px;
+    box-shadow:0 10px 30px rgba(31,79,216,.24);
+  }
+  .hero h1{margin:0 0 8px;font-size:26px;line-height:1.35;}
+  .hero .sub{opacity:.92;font-size:14px;}
+  .hero .meta{margin-top:16px;font-size:13px;opacity:.95;line-height:2;}
+  .hero .meta a{color:#fff;text-decoration:underline;}
+  .hero .meta b{color:#dce8ff;}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px 26px;margin-bottom:20px;
+  }
+  h2{
+    font-size:19px;margin:0 0 14px;padding-bottom:10px;
+    border-bottom:2px solid #eef2ff;display:flex;align-items:center;gap:10px;
+  }
+  h2 .n{
+    width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex:none;
+  }
+  h3{font-size:16px;margin:22px 0 10px;color:var(--accent-dark);}
+  h4{font-size:14.5px;margin:16px 0 8px;}
+  p{margin:9px 0;}
+  ul,ol{margin:9px 0;padding-left:24px;}
+  li{margin:5px 0;}
+  a{color:var(--accent);}
+  code{
+    background:var(--code-bg);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-family:Consolas,"Courier New",monospace;font-size:13.5px;color:#b8295b;
+  }
+  pre{
+    background:#1f2430;color:#e6e9f0;border-radius:10px;padding:14px 16px;
+    overflow-x:auto;font-size:13px;line-height:1.65;
+    font-family:Consolas,"Courier New",monospace;margin:10px 0;
+  }
+  pre code{background:none;border:none;color:inherit;padding:0;}
+  .cmt{color:#8b95a8;}
+  .kw{color:#8ab4ff;}
+  .str{color:#a5e075;}
+  .num{color:#f0a868;}
+
+  .quick{
+    background:#f0f7ff;border:1px solid #cfe0ff;border-left:4px solid var(--accent);
+    border-radius:10px;padding:14px 18px;margin:14px 0;
+  }
+  .tip{background:#f0fdf4;border:1px solid #bbf7d0;border-left:4px solid var(--ok);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px;}
+  .warn{background:#fffbeb;border:1px solid #fde68a;border-left:4px solid var(--warn);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px;}
+  .danger{background:#fef2f2;border:1px solid #fecaca;border-left:4px solid var(--danger);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:14px;}
+
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px;}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top;}
+  th{background:#f7f9fc;font-weight:600;white-space:nowrap;}
+  tbody tr:nth-child(even){background:#fcfdff;}
+  td code,th code{font-size:13px;}
+
+  .toc{background:#fbfcfe;border:1px solid var(--line);border-radius:12px;padding:16px 22px;margin-bottom:22px;}
+  .toc h3{margin:0 0 10px;font-size:15px;color:var(--text);}
+  .toc ol{margin:0;padding-left:22px;columns:2;column-gap:32px;}
+  .toc li{margin:4px 0;font-size:14px;}
+  @media(max-width:700px){.toc ol{columns:1;}}
+
+  .badge{display:inline-block;background:#eef3ff;color:var(--accent);border-radius:6px;padding:1px 8px;font-size:12.5px;font-weight:600;}
+  .badge.ok{background:#dcfce7;color:#15803d;}
+  .badge.warn{background:#fef3c7;color:#b45309;}
+  .badge.danger{background:#fee2e2;color:#b91c1c;}
+
+  .tree{background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:14px 18px;font-family:Consolas,"Courier New",monospace;font-size:13.5px;line-height:1.9;white-space:pre;overflow-x:auto;}
+
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0;font-size:13.5px;}
+  .flow .node{background:#eef3ff;border:1px solid #cfe0ff;border-radius:8px;padding:7px 13px;color:var(--accent-dark);font-weight:600;}
+  .flow .arrow{color:var(--sub);}
+
+  .footer{
+    margin-top:36px;padding-top:18px;border-top:1px solid var(--line);
+    text-align:center;font-size:13px;color:var(--sub);line-height:2;
+  }
+  .footer a{color:var(--accent);text-decoration:none;}
+  .footer a:hover{text-decoration:underline;}
+  .footer .ver{color:var(--accent);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <h1>批量二维码排版打印工具 · 开发者手册</h1>
+    <div class="sub">单文件纯前端架构 · 零依赖 · 离线可用 · 源码级说明</div>
+    <div class="meta">
+      版本：<b>Ver 1.0</b><br>
+      作者：<b>Yulai</b>　|　E-mail：<a href="mailto:liyulai@qq.com">liyulai@qq.com</a><br>
+      GitHub：<a href="https://github.com/Locallabstide" target="_blank" rel="noopener">https://github.com/Locallabstide</a>
+    </div>
+  </div>
+
+  <div class="toc">
+    <h3>📖 目录</h3>
+    <ol>
+      <li><a href="#d1">项目概览</a></li>
+      <li><a href="#d2">设计原则与约束</a></li>
+      <li><a href="#d3">文件结构与代码分区</a></li>
+      <li><a href="#d4">状态模型 state</a></li>
+      <li><a href="#d5">排版算法详解</a></li>
+      <li><a href="#d6">渲染管线：预览 / 缩略图 / 导出</a></li>
+      <li><a href="#d7">标题排版与字形测量</a></li>
+      <li><a href="#d8">分组模型与文件夹导入</a></li>
+      <li><a href="#d9">ZIP 打包器实现</a></li>
+      <li><a href="#d10">预览缩放系统</a></li>
+      <li><a href="#d11">性能分析与量级</a></li>
+      <li><a href="#d12">兼容性矩阵</a></li>
+      <li><a href="#d13">已知问题与待办</a></li>
+      <li><a href="#d14">扩展指南</a></li>
+      <li><a href="#d15">调试与自测</a></li>
+      <li><a href="#d16">版本与联系</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="card" id="d1">
+    <h2><span class="n">1</span>项目概览</h2>
+    <p>一个<b>单 HTML 文件</b>的纯前端工具：用户上传若干二维码图片，工具为每张原图生成一张 A4 幅面、重复铺满该二维码的 PNG，并按文件夹分组打包为 ZIP 下载。</p>
+
+    <table>
+      <thead><tr><th>项</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>产物文件</td><td><code>qrcode-a4-layout.html</code>（单文件，含 HTML + CSS + JS）</td></tr>
+        <tr><td>代码规模</td><td>约 1375 行（其中 JS 约 950 行）</td></tr>
+        <tr><td>外部依赖</td><td><b>零</b>。无 CDN、无框架、无 npm 包、无字体文件</td></tr>
+        <tr><td>网络请求</td><td><b>零</b>。完全离线可用</td></tr>
+        <tr><td>运行环境</td><td>任何支持 ES2020 的浏览器；实测 Chrome / Edge</td></tr>
+        <tr><td>构建步骤</td><td><b>无</b>。源码即产物，双击即可运行</td></tr>
+        <tr><td>模块化</td><td>单个 IIFE，<code>"use strict"</code> 作用域隔离</td></tr>
+      </tbody>
+    </table>
+
+    <div class="quick">
+      <b>架构一句话总结：</b>无状态 UI 层 + 集中式 <code>state</code> 对象 + 三个渲染入口（<code>drawA4</code> 供预览/缩略图复用，<code>renderFull</code> 供 300DPI 导出）+ 自研 ZIP 打包器。
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="card" id="d2">
+    <h2><span class="n">2</span>设计原则与约束</h2>
+    <ol>
+      <li><b>单文件交付</b>：用户只需拷贝一个 <code>.html</code>，无安装、无依赖、无构建。这是本文档最重要的约束 —— 任何引入外部库的改动都应被否决，除非收益极大。</li>
+      <li><b>离线优先 / 隐私优先</b>：图片全程不离开浏览器。禁用一切网络调用（<code>fetch</code>、<code>XMLHttpRequest</code>、外链资源）。</li>
+      <li><b>厘米为准的心智模型</b>：所有参数、常量、公式一律以厘米为单位，仅在真正绘制时换算成像素。避免"像素信仰"导致的打印尺寸漂移。</li>
+      <li><b>单一真相源</b>：所有可交互状态集中在 <code>state</code>，DOM 只作展示。任何参数变更走 <code>readXxx()</code> → <code>renderXxx()</code> 的单向流。</li>
+      <li><b>三条渲染路径口径一致</b>：预览、缩略图、导出必须用同一套排版常量与同一套定位公式，否则会出现"预览好看、导出跑偏"。这是项目中最容易出 bug 的地方，改动时务必交叉验证。</li>
+      <li><b>降级而非报错</b>：<code>CompressionStream</code> 不可用 → 存储模式；<code>actualBoundingBox</code> 不可用 → 1.16em 兜底；拖拽取不到路径 → <code>_relPath</code> 兜底。</li>
+    </ol>
+  </div>
+
+  <!-- 3 -->
+  <div class="card" id="d3">
+    <h2><span class="n">3</span>文件结构与代码分区</h2>
+    <div class="tree">&lt;head&gt;
+ ├─ &lt;style&gt;            CSS：变量、布局、卡片、控件、预览、缩放条、进度层、底部页脚
+ └─ &lt;title&gt;            浏览器标签标题
+
+&lt;body&gt;
+ ├─ .wrap
+ │   ├─ .col-left        左栏：上传卡 / 参数卡 / 标题卡 / 排版统计卡
+ │   ├─ .col-right       右栏：预览头 + 缩放条 + 舞台 + 缩略图条
+ │   └─ .page-footer     底部版权信息（flex-basis:100% 强制换行占满整行）
+ ├─ #overlay             导出进度遮罩
+ └─ &lt;script&gt;            单 IIFE，分区如下：
+
+     ① 常量           A4_W_CM / A4_H_CM / MARGIN_CM / PRINT_DPI / PREVIEW_PX_PER_CM
+                      GAP_FALLBACK_CM / TITLE_TOP_CM / TITLE_GAP_CM / CM_PER_INCH
+     ② 状态           state = { files, groups, current, params, title, zoom, titleTouched }
+     ③ 元素引用       $() + elXxx 批量声明
+     ④ 工具函数       cmToPx / titleBandCm / calcLayout
+     ⑤ 图片加载       loadImage / addFiles / groupKeyOf / syncGroups / guessFolder
+     ⑥ 文件列表渲染   renderFileList
+     ⑦ 绘制核心       drawA4 / titleGlyphHeight / fitSingleLine / drawContain
+     ⑧ 主预览         renderPreview
+     ⑨ 缩放系统       zoomWidthPx / fitWidthPx / applyZoom / setZoomMode / setZoomFactor
+     ⑩ 布局解析       resolveLayout / setStats / updateNotice
+     ⑪ 缩略图         renderThumbs
+     ⑫ 导出           renderFull / baseName / titleForFile / canvasToBlob
+                      exportAll / exportOne / downloadBlob
+     ⑬ ZIP 打包       CRC_TABLE / crc32 / deflateRaw / dosDateTime / u16 / u32
+                      buildZip / concat
+     ⑭ 转义           escapeHtml / escapeAttr
+     ⑮ 事件绑定       input / drop / title / params / zoom / export
+     ⑯ 初始化         readParams / readTitle / syncTitleUI / renderPreview / renderFileList</div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card" id="d4">
+    <h2><span class="n">4</span>状态模型 state</h2>
+<pre><code><span class="kw">const</span> state = {
+  files: [],      <span class="cmt">// [{ id, file, name, url, img, groupId }]  已加载的图片项</span>
+  groups: [],     <span class="cmt">// [{ id, name, key, fileIds }]           分组（导出粒度）</span>
+  current: 0,     <span class="cmt">// 当前预览的 files 索引</span>
+  params: { w:3, h:3, gapX:0.5, gapY:0.5 },                       <span class="cmt">// 单位 cm</span>
+  title:  { on:true, src:<span class="str">"filename"</span>, text:<span class="str">""</span>, prefix:<span class="str">""</span>,
+            suffix:<span class="str">""</span>, pos:<span class="str">"top"</span>, sizeMM:14 },            <span class="cmt">// 字号单位 mm</span>
+  zoom:   { mode:<span class="str">"fit"</span>, factor:1 },   <span class="cmt">// fit | manual | actual</span>
+  titleTouched: <span class="kw">false</span>  <span class="cmt">// 用户是否手动改过"导出文件名"，改过则锁定，导入时不再自动覆盖</span>
+};
+<span class="kw">let</span> uid = 0;   <span class="cmt">// 文件项自增 id</span>
+<span class="kw">let</span> gid = 0;   <span class="cmt">// 分组自增 id</span>
+</code></pre>
+    <table>
+      <thead><tr><th>字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>files[].url</code></td><td><code>URL.createObjectURL(f)</code> 产生的 blob URL。<b>移除/清空时必须 <code>revokeObjectURL</code></b>，否则内存泄漏。</td></tr>
+        <tr><td><code>files[].img</code></td><td>已 <code>onload</code> 完成的 <code>HTMLImageElement</code>，可直接 <code>drawImage</code>。</td></tr>
+        <tr><td><code>files[].groupId</code></td><td>冗余字段，指向所属组；导出时按它过滤。</td></tr>
+        <tr><td><code>groups[].key</code></td><td><b>完整相对路径</b>（如 <code>主文件夹/子A</code>），用于唯一匹配组。不同于 <code>name</code>（仅末段，可能重名）。</td></tr>
+        <tr><td><code>groups[].fileIds</code></td><td>有序 id 列表，决定 <code>state.files</code> 的重排顺序。</td></tr>
+        <tr><td><code>titleTouched</code></td><td>粘性标志：一旦用户手动输入过"导出文件名"，后续导入不再自动改它。</td></tr>
+      </tbody>
+    </table>
+    <div class="warn">
+      ⚠️ <b>不变量：</b><code>state.files</code> 的顺序必须与 <code>groups</code> 中 <code>fileIds</code> 的拼接顺序一致。这个不变式由 <code>syncGroups()</code> 维护，任何直接增删 <code>state.files</code> 的代码都必须随后调用它。
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card" id="d5">
+    <h2><span class="n">5</span>排版算法详解</h2>
+
+    <h3>5.1 常量</h3>
+<pre><code><span class="kw">const</span> A4_W_CM = <span class="num">21.0</span>, A4_H_CM = <span class="num">29.7</span>;   <span class="cmt">// A4 物理尺寸</span>
+<span class="kw">const</span> MARGIN_CM = <span class="num">1.0</span>;                       <span class="cmt">// 四周安全边距</span>
+<span class="kw">const</span> PRINT_DPI = <span class="num">300</span>;                      <span class="cmt">// 导出分辨率</span>
+<span class="kw">const</span> PREVIEW_PX_PER_CM = <span class="num">26</span>;               <span class="cmt">// 预览基准比例</span>
+<span class="kw">const</span> GAP_FALLBACK_CM = <span class="num">0.3</span>;                 <span class="cmt">// 自动缩小时的保底最小间距</span>
+<span class="kw">const</span> TITLE_TOP_CM = <span class="num">0.6</span>;                    <span class="cmt">// 标题距【物理】上/下边缘</span>
+<span class="kw">const</span> TITLE_GAP_CM = <span class="num">0.5</span>;                    <span class="cmt">// 标题与首/末行二维码间距</span>
+<span class="kw">const</span> CM_PER_INCH = <span class="num">2.54</span>;
+</code></pre>
+
+    <h3>5.2 容量计算 calcLayout</h3>
+<pre><code><span class="cmt">// 水平：可用宽 = 21 - 1*2 = 19cm</span>
+<span class="cmt">// 垂直：可用高 = 29.7 - 1*2 - titleBandCm()</span>
+
+<span class="kw">function</span> calcLayout(){
+  <span class="kw">const</span> availW = A4_W_CM - MARGIN_CM*<span class="num">2</span>;
+  <span class="kw">const</span> availH = A4_H_CM - MARGIN_CM*<span class="num">2</span> - titleBandCm();
+  <span class="kw">const</span> cols = Math.floor((availW + gx) / (w + gx));   <span class="cmt">// 首尾不留间距的经典公式</span>
+  <span class="kw">const</span> rows = Math.floor((availH + gy) / (h + gy));
+  <span class="kw">return</span> { cols, rows, total: cols*rows, availW, availH };
+}
+</code></pre>
+    <p><b>公式推导</b>：n 个格子 + (n−1) 个间距 ≤ availW，即 <code>n·w + (n−1)·gx ≤ availW</code>。解得 <code>n ≤ (availW + gx)/(w + gx)</code>，向下取整。</p>
+
+    <h3>5.3 标题占用高度 titleBandCm</h3>
+    <p>用于容量估算（只关心"扣掉多少高度"，不关心具体像素）：</p>
+<pre><code><span class="kw">function</span> titleBandCm(){
+  <span class="kw">if</span>(!t.on) <span class="kw">return</span> <span class="num">0</span>;
+  <span class="cmt">// 内容 = 距上边缘0.6 + 字形高 + 与二维码间距0.5</span>
+  <span class="cmt">// 但 0.6cm 已经落在 1cm 安全边距内部，所以只需额外扣 (0.6 + 字高 + 0.5 - 1)</span>
+  <span class="kw">const</span> glyphCm = (t.sizeMM/<span class="num">10</span>) * <span class="num">1.16</span>;   <span class="cmt">// 1.16em ≈ 汉字字面高</span>
+  <span class="kw">return</span> TITLE_TOP_CM + glyphCm + TITLE_GAP_CM - MARGIN_CM;
+}
+</code></pre>
+    <div class="warn">
+      ⚠️ 这里用 <code>1.16em</code> 近似字高，而实际绘制用 <code>actualBoundingBox</code> 精确测量。两者<b>理论上可能差几个像素</b>，但因为 <code>availH</code> 还有余量，且 <code>rows</code> 取整，实测不会导致越界。<b>这是刻意的近似，不要试图"修"它</b>。
+    </div>
+
+    <h3>5.4 极端参数兜底 resolveLayout</h3>
+    <p>当 <code>calcLayout().total &lt; 1</code>（放不下）时，以 0.95 的比例迭代缩小尺寸/间距，最多 80 轮，直至至少能放 1 个：</p>
+<pre><code><span class="kw">for</span>(<span class="kw">let</span> i=<span class="num">0</span>; i>&lt;<span class="num">80</span> &amp;&amp; (放不下); i++){
+  <span class="kw">if</span>(横向仍放不下){ w *= <span class="num">0.95</span>; <span class="kw">if</span>(gx > GAP_FALLBACK_CM) gx *= <span class="num">0.95</span>; }
+  <span class="kw">if</span>(纵向仍放不下){ h *= <span class="num">0.95</span>; <span class="kw">if</span>(gy > GAP_FALLBACK_CM) gy *= <span class="num">0.95</span>; }
+}
+</code></pre>
+    <ul>
+      <li><b>收敛性</b>：<code>0.95^80 ≈ 0.016</code>，即最多缩到原尺寸的 1.6%，必然放下，不会死循环。</li>
+      <li><b>返回值</b>带 <code>scaled:true</code> 标记，导出路径据此改用缩放后的尺寸（保证导出与预览一致）。</li>
+      <li>同时通过 <code>updateNotice()</code> 向用户显示黄色提示。</li>
+    </ul>
+
+    <h3>5.5 单位换算</h3>
+<pre><code><span class="cmt">// 厘米 → 像素（按指定 DPI）</span>
+<span class="kw">function</span> cmToPx(cm, dpi){ <span class="kw">return</span> Math.round(cm / <span class="num">2.54</span> * dpi); }
+
+<span class="cmt">// 300 DPI 下 A4 画布尺寸</span>
+<span class="cmt">// 2480 × 3508 px    (21/2.54*300 = 2480.3 → 2480)</span>
+
+<span class="cmt">// 每厘米对应像素（导出用）</span>
+<span class="kw">const</span> pxPerCm = PRINT_DPI / <span class="num">2.54</span>;   <span class="cmt">// ≈ 118.11 px/cm</span>
+</code></pre>
+  </div>
+
+  <!-- 6 -->
+  <div class="card" id="d6">
+    <h2><span class="n">6</span>渲染管线：预览 / 缩略图 / 导出</h2>
+
+    <div class="flow">
+      <span class="node">state</span><span class="arrow">→</span>
+      <span class="node">resolveLayout()</span><span class="arrow">→</span>
+      <span class="node">drawA4() / renderFull()</span><span class="arrow">→</span>
+      <span class="node">canvas</span><span class="arrow">→</span>
+      <span class="node">CSS 缩放 或 toBlob</span>
+    </div>
+
+    <h3>三个入口的分工</h3>
+    <table>
+      <thead><tr><th>入口</th><th>调用者</th><th>pxPerCm</th><th>分辨率</th><th>输出</th></tr></thead>
+      <tbody>
+        <tr><td><code>drawA4()</code></td><td>主预览 / 缩略图</td><td>26（预览）<br>3.24（缩略图）</td><td>546×772<br>68×96</td><td>屏幕显示</td></tr>
+        <tr><td><code>renderFull()</code></td><td>导出</td><td>118.11</td><td>2480×3508</td><td>PNG blob</td></tr>
+      </tbody>
+    </table>
+
+    <div class="warn">
+      ⚠️ <b>关键约束：<code>drawA4()</code> 与 <code>renderFull()</code> 是两份平行实现，逻辑必须保持同步。</b><br>
+      历史上曾因只改了其中一份导致"预览与导出不一致"（标题距上边缘 bug）。任何涉及定位的改动都要<b>同时改两处</b>并交叉验证。
+    </div>
+
+    <h3>核心绘制循环（以 renderFull 为例）</h3>
+<pre><code><span class="cmt">// 1. 标题下方起点</span>
+contentTop = titleTopY + glyphH + pxPerCm * TITLE_GAP_CM;   <span class="cmt">// titleTopY = 0.6cm</span>
+contentH   = pxPerCm*A4_H_CM - contentTop - m;              <span class="cmt">// 底部仍留 1cm</span>
+
+<span class="cmt">// 2. 网格对齐：水平居中，垂直【靠上】</span>
+offX = m + Math.max(<span class="num">0</span>, (contentW - usedW) / <span class="num">2</span>);
+offY = contentTop;                          <span class="cmt">// 不居中！余量全部留在底部</span>
+
+<span class="cmt">// 3. 双重循环绘制</span>
+<span class="kw">for</span>(r…) <span class="kw">for</span>(c…) drawContain(ctx, img, offX + c*(w+gx), offY + r*(h+gy), w, h);
+</code></pre>
+
+    <h3>等比绘制 drawContain</h3>
+<pre><code><span class="kw">function</span> drawContain(ctx, img, x, y, bw, bh){
+  <span class="kw">const</span> s = Math.min(bw/iw, bh/ih);          <span class="cmt">// 取小 → contain</span>
+  <span class="kw">const</span> dw = iw*s, dh = ih*s;
+  <span class="kw">const</span> dx = x + (bw-dw)/<span class="num">2</span>, dy = y + (bh-dh)/<span class="num">2</span>;   <span class="cmt">// 格子内居中</span>
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+</code></pre>
+    <p>用 <code>Math.min</code> 而非 <code>Math.max</code>：前者是 contain（完整放入、可能留白），后者是 cover（填满、可能裁切）。二维码<b>必须</b> contain，否则会被切掉定位角。</p>
+
+    <h3>三路径一致性验证（实测）</h3>
+    <p>默认参数（3×3cm / 间距 0.5 / 字号 14mm）下，三条路径的 <code>contentTop</code> 均为 <b>2.724 cm</b>（= 0.6 + 字形高 1.624 + 0.5），完全对齐。验证脚本见第 15 节。</p>
+  </div>
+
+  <!-- 7 -->
+  <div class="card" id="d7">
+    <h2><span class="n">7</span>标题排版与字形测量</h2>
+
+    <h3>7.1 为什么不直接用 fontPx × 1.35</h3>
+    <p>Canvas 的 <code>font</code> 尺寸是"行高"概念，不等于汉字实际可见高度。用行高估算会在标题下方留下约 0.35em 的多余空白（用户实测反馈过）。</p>
+
+    <h3>7.2 titleGlyphHeight —— 精确测量</h3>
+<pre><code><span class="kw">function</span> titleGlyphHeight(ctx, fontPx){
+  <span class="kw">const</span> prevFont = ctx.font;
+  <span class="kw">const</span> m = ctx.measureText(<span class="str">"中文Ag"</span>);   <span class="cmt">// 同时覆盖 CJK 与拉丁</span>
+  <span class="kw">let</span> h = <span class="num">0</span>;
+  <span class="kw">if</span>(m.actualBoundingBoxAscent !== <span class="kw">undefined</span>){
+    h = m.actualBoundingBoxAscent + (m.actualBoundingBoxDescent || <span class="num">0</span>);
+  }
+  ctx.font = prevFont;
+  <span class="kw">if</span>(!h || !isFinite(h)) h = fontPx * <span class="num">1.16</span>;   <span class="cmt">// 兜底</span>
+  <span class="kw">return</span> h;
+}
+</code></pre>
+    <ul>
+      <li><b>调用前提</b>：<code>ctx.font</code> 必须<b>先设好</b>目标字体，否则测的是上一次的字体。</li>
+      <li>测量样本用 <code>"中文Ag"</code>：汉字决定 ascent，含下伸部的拉丁字母决定 descent。</li>
+      <li><code>textBaseline = "top"</code> 时，<code>fillText(text, x, topY)</code> 的 <code>topY</code> 是行框顶部，字形实际从 <code>topY + ascent</code> 处开始。因此"字形底边"= <code>topY + ascent + descent = topY + h</code>。</li>
+    </ul>
+
+    <h3>7.3 标题定位公式</h3>
+    <table>
+      <thead><tr><th>位置</th><th>标题 topY</th><th>内容区 contentTop</th></tr></thead>
+      <tbody>
+        <tr><td>顶部</td><td><code>pxPerCm × 0.6</code></td><td><code>titleTopY + glyphH + pxPerCm×0.5</code></td></tr>
+        <tr><td>底部</td><td><code>canvasH − pxPerCm×0.6 − glyphH</code></td><td><code>m</code>（正文从 1cm 起）</td></tr>
+      </tbody>
+    </table>
+    <p><b>注意</b>：顶部的 <code>0.6cm</code> 从<b>物理上边缘</b>量起，<b>不是</b>从 1cm 安全边距量起。这是历史 bug 的修复点（曾误写为 <code>m + 0.6cm</code>，实际变成 1.6cm）。</p>
+
+    <h3>7.4 超长标题自动缩字 fitSingleLine</h3>
+<pre><code><span class="kw">function</span> fitSingleLine(ctx, text, maxW){
+  <span class="cmt">// 循环把字号 ×0.95，最多 40 轮，直到宽度 ≤ maxW 或字号 ≤ 8px</span>
+  <span class="cmt">// 注意：修改的是 ctx.font，调用后 ctx.font 已被改小</span>
+}
+</code></pre>
+    <div class="warn">
+      ⚠️ <b>副作用陷阱</b>：<code>fitSingleLine</code> 内部直接修改 <code>ctx.font</code>，且不恢复。因此调用方必须在<b>绘制标题前重新设一次 <code>ctx.font</code></b>，否则后续任何测量都会用缩小后的字号。<br>
+      当前代码在 <code>drawA4</code> / <code>renderFull</code> 中都是在 <code>fillText</code> 前紧邻重设 font，规避了这个问题 —— <b>改这段代码时务必保持这个习惯</b>。
+    </div>
+
+    <h3>7.5 标题来源解析 titleForFile</h3>
+<pre><code><span class="kw">function</span> titleForFile(file){
+  <span class="kw">if</span>(!t.on) <span class="kw">return</span> <span class="str">""</span>;
+  <span class="kw">const</span> base = (t.src===<span class="str">"custom"</span>) ? t.text : baseName(file.name);
+  <span class="kw">return</span> (t.prefix||<span class="str">""</span>) + base + (t.suffix||<span class="str">""</span>);
+}
+</code></pre>
+    <p>导出时每张图调用一次，因此"文件名模式"下每张图标题不同；"固定文字模式"下全部相同。</p>
+  </div>
+
+  <!-- 8 -->
+  <div class="card" id="d8">
+    <h2><span class="n">8</span>分组模型与文件夹导入</h2>
+
+    <h3>8.1 分组键 groupKeyOf</h3>
+<pre><code><span class="kw">function</span> groupKeyOf(f){
+  <span class="kw">const</span> p = f.webkitRelativePath || f._relPath || <span class="str">""</span>;
+  <span class="kw">if</span>(!p) <span class="kw">return</span> <span class="str">""</span>;
+  <span class="kw">const</span> parts = p.split(<span class="str">"/"</span>).filter(Boolean);
+  parts.pop();                              <span class="cmt">// 去掉文件名</span>
+  <span class="kw">if</span>(parts.length===<span class="num">1</span>) <span class="kw">return</span> parts[<span class="num">0</span>];            <span class="cmt">// 主文件夹下直接是图</span>
+  <span class="kw">return</span> parts[<span class="num">0</span>] + <span class="str">"/"</span> + parts[<span class="num">1</span>];              <span class="cmt">// 主文件夹/第一层子文件夹</span>
+}
+</code></pre>
+    <p><b>语义</b>：以「主文件夹 / 第一层子文件夹」为分组粒度，更深的层级并入所在的第一层子文件夹。</p>
+    <table>
+      <thead><tr><th>输入路径</th><th>分组键</th></tr></thead>
+      <tbody>
+        <tr><td><code>主/a.png</code></td><td><code>主</code></td></tr>
+        <tr><td><code>主/子A/b.png</code></td><td><code>主/子A</code></td></tr>
+        <tr><td><code>主/子A/更深/c.png</code></td><td><code>主/子A</code></td></tr>
+        <tr><td><code>主/子B/d.png</code></td><td><code>主/子B</code></td></tr>
+      </tbody>
+    </table>
+    <p><b>为什么不用 <code>parts[0]</code> 单层？</b>那样会把 <code>主/</code> 下所有子文件夹并成一组，用户实测反馈过"导入进去的没有按文件夹分组"。</p>
+    <p><b>为什么不用「完整路径」作键？</b>"主/子A/更深"与"主/子A"会分裂成两组，用户期望的是按可见的第一层归类。</p>
+
+    <h3>8.2 组名 displayNameOf</h3>
+    <p>取 key 的末段作为组显示名（ZIP 命名用）。例如 <code>主/子A</code> → <code>子A</code>。</p>
+    <p>当不同主文件夹下有同名子文件夹（如 <code>甲/门店</code> 与 <code>乙/门店</code>），<code>name</code> 会重名。此时：</p>
+    <ul>
+      <li>组匹配用 <code>key</code>（唯一）而非 <code>name</code>，避免误合并；</li>
+      <li><code>renderFileList</code> 检测到重名时，表头改为显示完整 <code>key</code> 以便区分；</li>
+      <li>ZIP 命名冲突时自动加 <code>(2)</code> <code>(3)</code>。</li>
+    </ul>
+
+    <h3>8.3 三种导入来源</h3>
+    <table>
+      <thead><tr><th>来源</th><th>路径字段</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>&lt;input type=file multiple&gt;</code></td><td>无</td><td>落在 <code>folderName</code>（"（未命名）"）单组</td></tr>
+        <tr><td><code>&lt;input webkitdirectory&gt;</code></td><td><code>webkitRelativePath</code></td><td>浏览器原生填充</td></tr>
+        <tr><td>拖拽（<code>webkitGetAsEntry</code>）</td><td>手工补写</td><td>见下</td></tr>
+      </tbody>
+    </table>
+
+    <h3>8.4 拖拽路径补写 collectFromEntries</h3>
+    <p>拖拽得到的 <code>File</code> 对象<b>没有</b> <code>webkitRelativePath</code>。递归遍历目录树时手工补：</p>
+<pre><code><span class="kw">try</span>{
+  Object.defineProperty(f, <span class="str">"webkitRelativePath"</span>,
+    { value: prefix + entry.name, configurable: <span class="kw">true</span> });
+}<span class="kw">catch</span>(e){ f._relPath = prefix + entry.name; }   <span class="cmt">// 兜底</span>
+</code></pre>
+    <ul>
+      <li><code>defineProperty</code> 在某些浏览器对 <code>File</code> 的宿主属性可能失败，故有 catch 兜底。</li>
+      <li><code>groupKeyOf</code> 同时读取 <code>webkitRelativePath</code> 和 <code>_relPath</code>，两条路都通。</li>
+      <li>目录递归用<b>分批读取</b>（<code>readEntries</code> 一次最多返回 100 项，需循环调用直到返回空数组）。</li>
+    </ul>
+
+    <h3>8.5 syncGroups —— 不变量维护</h3>
+<pre><code><span class="kw">function</span> syncGroups(){
+  <span class="cmt">// 1. 剔除已删除的 id</span>
+  <span class="cmt">// 2. 丢弃空组</span>
+  <span class="cmt">// 3. 按 groups 顺序重排 state.files</span>
+  <span class="cmt">// 4. 修正越界的 state.current</span>
+}
+</code></pre>
+    <p>任何删除操作（<code>removeFile</code> / <code>clearAll</code>）后都必须调用，否则列表与预览会错位。</p>
+  </div>
+
+  <!-- 9 -->
+  <div class="card" id="d9">
+    <h2><span class="n">9</span>ZIP 打包器实现</h2>
+    <p>为了让单文件工具保持"零依赖"，ZIP 是按 <b>PKZIP APPNOTE</b> 规范手写的。</p>
+
+    <h3>9.1 结构</h3>
+    <div class="tree">[本地文件头 LFH] [文件数据] [本地文件头 LFH] [文件数据] …
+[中央目录项 CDH] × N
+[中央目录结束记录 EOCD]</div>
+
+    <h3>9.2 关键字段</h3>
+    <table>
+      <thead><tr><th>字段</th><th>值</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>LFH 签名</td><td><code>0x04034B50</code></td><td>"PK\3\4"</td></tr>
+        <tr><td>CDH 签名</td><td><code>0x02014B50</code></td><td>"PK\1\2"</td></tr>
+        <tr><td>EOCD 签名</td><td><code>0x06054B50</code></td><td>"PK\5\6"</td></tr>
+        <tr><td>通用标志位</td><td><code>0x0800</code></td><td><b>bit 11 = UTF-8 文件名</b>，中文名必需</td></tr>
+        <tr><td>压缩方法</td><td><code>8</code> deflate / <code>0</code> store</td><td>按 <code>CompressionStream</code> 可用性选择</td></tr>
+        <tr><td>版本需求</td><td><code>20</code></td><td>2.0（支持 deflate）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>9.3 CRC32</h3>
+<pre><code><span class="cmt">// 标准 IEEE 802.3 多项式 0xEDB88320（反射形式），查表法</span>
+<span class="kw">const</span> CRC_TABLE = (()=>{ <span class="cmt">/* 256 项预计算 */</span> })();
+<span class="kw">function</span> crc32(buf){
+  <span class="kw">let</span> c = <span class="num">0xFFFFFFFF</span>;
+  <span class="kw">for</span>(<span class="kw">let</span> i=<span class="num">0</span>; i&lt;buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) &amp; <span class="num">0xFF</span>] ^ (c >>> <span class="num">8</span>);
+  <span class="kw">return</span> (c ^ <span class="num">0xFFFFFFFF</span>) >>> <span class="num">0</span>;
+}
+</code></pre>
+
+    <h3>9.4 压缩 deflateRaw</h3>
+<pre><code><span class="kw">async function</span> deflateRaw(buf){
+  <span class="kw">if</span>(<span class="kw">typeof</span> CompressionStream === <span class="str">"undefined"</span>) <span class="kw">return null</span>;   <span class="cmt">// 触发回退</span>
+  <span class="kw">const</span> cs = <span class="kw">new</span> CompressionStream(<span class="str">"deflate-raw"</span>);
+  <span class="kw">const</span> w = cs.writable.getWriter();
+  w.write(buf); w.close();
+  <span class="kw">const</span> ab = <span class="kw">await new</span> Response(cs.readable).arrayBuffer();
+  <span class="kw">return new</span> Uint8Array(ab);
+}
+</code></pre>
+    <div class="warn">
+      ⚠️ 必须用 <code><b>"deflate-raw"</b></code>（裸 deflate，无 zlib 头尾），<b>不能</b>用 <code>"deflate"</code>（那是 zlib 格式，带 2 字节头 + 4 字节 Adler-32，ZIP 会解压失败）。
+    </div>
+    <p>失败或不可用时返回 <code>null</code>，<code>buildZip</code> 自动改用 <code>method=0</code> 存储模式，<b>ZIP 依然合法可解压</b>，只是体积大些。</p>
+
+    <h3>9.5 时间戳 dosDateTime</h3>
+<pre><code><span class="kw">const</span> time = (hour&lt;&lt;<span class="num">11</span>) | (min&lt;&lt;<span class="num">5</span>) | (sec/<span class="num">2</span>);      <span class="cmt">// 秒只有 5 bit，精度 2 秒</span>
+<span class="kw">const</span> date = ((year-<span class="num">1980</span>)&lt;&lt;<span class="num">9</span>) | ((month+<span class="num">1</span>)&lt;&lt;<span class="num">5</span>) | day;  <span class="cmt">// 年份从 1980 起算</span>
+</code></pre>
+
+    <h3>9.6 偏移量累计</h3>
+    <pre><code>offset += localHead.length + stored.length;   <span class="cmt">// 中央目录需记录每个 LFH 的起始偏移</span></code></pre>
+    <p>此处必须累计<b>压缩后</b>长度（<code>stored.length</code>），不是原始长度。</p>
+
+    <h3>9.7 验证</h3>
+    <p>已用 Node 复现同一算法生成 ZIP，再用 Python <code>zipfile.testzip()</code> 校验：<b>CRC 全部通过、中文文件名完好、deflate 正常</b>。</p>
+  </div>
+
+  <!-- 10 -->
+  <div class="card" id="d10">
+    <h2><span class="n">10</span>预览缩放系统</h2>
+    <table>
+      <thead><tr><th>模式</th><th>zoomWidthPx() 返回</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>fit</code></td><td><code>fitWidthPx()</code></td><td>完整显示，随窗口自适应</td></tr>
+        <tr><td><code>manual</code></td><td><code>fitWidthPx() × factor</code></td><td>0.1 ~ 5 倍手动</td></tr>
+        <tr><td><code>actual</code></td><td><code>(21/2.54)×96 ≈ 793.7px</code></td><td>1:1 物理尺寸</td></tr>
+      </tbody>
+    </table>
+
+    <h3>实现方式：CSS 缩放</h3>
+<pre><code>elPaper.style.width  = targetW + <span class="str">"px"</span>;
+elPaper.style.height = (targetW * A4_H_CM / A4_W_CM) + <span class="str">"px"</span>;
+<span class="cmt">/* canvas 保持 width:100%; height:100%，由浏览器做重采样 */</span>
+</code></pre>
+    <p><b>优点</b>：缩放时不重绘 canvas，切换极快、无闪烁。<br><b>代价</b>：放大超过 1 倍时预览会变模糊 —— 因为 canvas 内部像素分辨率固定（546×772）。这是<b>刻意取舍</b>，预览只作参考，真正精度以导出为准。</p>
+
+    <h3>fitWidthPx 的计算</h3>
+<pre><code><span class="kw">const</span> avail  = Math.max(<span class="num">160</span>, stage.clientWidth - <span class="num">44</span>);        <span class="cmt">// 44 = stage 内边距</span>
+<span class="kw">const</span> availH = Math.max(<span class="num">160</span>, window.innerHeight - <span class="num">220</span>);     <span class="cmt">// 220 ≈ 其它 UI 高度估算</span>
+<span class="kw">return</span> Math.min(avail, availH * (A4_W_CM/A4_H_CM));              <span class="cmt">// 宽高都别超</span>
+</code></pre>
+    <p>窗口 resize 时，仅当处于 <code>fit</code> 模式才自动重算。</p>
+
+    <h3>"1:1 实际尺寸"的精度说明</h3>
+    <p>基于 CSS 规范 <code>1in = 96px</code> 的物理单位换算，但<b>实际屏幕物理密度由操作系统缩放、显示器 PPI 决定</b>，因此只能作参考量级，不能当尺子。此限制已在用户手册第 7 节说明。</p>
+  </div>
+
+  <!-- 11 -->
+  <div class="card" id="d11">
+    <h2><span class="n">11</span>性能分析与量级</h2>
+
+    <h3>11.1 内存</h3>
+    <table>
+      <thead><tr><th>对象</th><th>量级</th></tr></thead>
+      <tbody>
+        <tr><td>单张 300DPI A4 canvas 位图</td><td><b>2480 × 3508 × 4B ≈ 33.2 MB</b></td></tr>
+        <tr><td>PNG 编码后（二维码黑白）</td><td>约 50 ~ 300 KB / 张</td></tr>
+        <tr><td>200 张的 PNG 数据累积</td><td>约 30 MB</td></tr>
+      </tbody>
+    </table>
+
+    <div class="tip">
+      ✅ <b>为什么不会 OOM：</b>导出循环是<b>串行</b>的 —— 每次只创建 1 张 33MB 的 canvas，编码成 PNG 后 canvas 即被 GC 回收，只保留几十 KB 的 PNG 字节。<br>
+      <b>反面教材</b>：若改成 <code>Promise.all</code> 并行，16 核机器会同时开 16 张 33MB canvas ≈ 530MB，且每张都要走完整的 2480×3508 绘制 + PNG 编码（CPU 密集），<b>反而更慢且可能崩</b>。这就是串行的原因。
+    </div>
+
+    <h3>11.2 时间</h3>
+    <ul>
+      <li>单张渲染 + PNG 编码：数十毫秒 ~ 数百毫秒（取决于机器与图中二维码密度）</li>
+      <li>100 张：约十几秒到一分钟（进度条按张数线性推进）</li>
+      <li>缩略图全量重绘：100 张 × 35 次 <code>drawImage</code>（68×96 小画布）≈ 毫秒级</li>
+    </ul>
+
+    <h3>11.3 主线程阻塞</h3>
+    <p>导出循环虽然 <code>await</code> 了 <code>toBlob</code>，但每次绘制是同步的，会短暂占用主线程。靠 <code>setOverlay()</code> 强制重排 + <code>await</code> 让出事件循环，进度条得以刷新。<b>未使用 Web Worker</b>（因为 <code>HTMLImageElement</code> 不便跨线程传输，收益不划算）。</p>
+
+    <h3>11.4 已识别但可接受的浪费</h3>
+    <ul>
+      <li><code>renderThumbs()</code> 每次切图都全量重建所有缩略图，而非只更新选中态。100 张时多做了 99 次无用绘制，但总量仍毫秒级。</li>
+      <li>缩略图内每张都调一次 <code>resolveLayout()</code>，纯计算，无压力。</li>
+    </ul>
+  </div>
+
+  <!-- 12 -->
+  <div class="card" id="d12">
+    <h2><span class="n">12</span>兼容性矩阵</h2>
+    <table>
+      <thead><tr><th>特性</th><th>Chrome</th><th>Edge</th><th>Firefox</th><th>Safari</th><th>降级策略</th></tr></thead>
+      <tbody>
+        <tr><td><code>CompressionStream("deflate-raw")</code></td><td class="ok">103+</td><td class="ok">103+</td><td class="ok">113+</td><td class="ok">16.4+</td><td>回退 <code>method=0</code> 存储模式 <span class="badge ok">已实现</span></td></tr>
+        <tr><td><code>webkitdirectory</code></td><td>✅</td><td>✅</td><td>❌</td><td>✅</td><td>拖拽文件夹 <span class="badge ok">已实现</span></td></tr>
+        <tr><td><code>webkitGetAsEntry</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
+        <tr><td><code>actualBoundingBox*</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td><code>fontPx×1.16</code> 兜底 <span class="badge ok">已实现</span></td></tr>
+        <tr><td><code>canvas.toBlob</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
+        <tr><td><code>URL.createObjectURL</code></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>—</td></tr>
+        <tr><td><code>Object.defineProperty(File,…)</code></td><td>部分</td><td>部分</td><td>部分</td><td>部分</td><td><code>_relPath</code> 兜底 <span class="badge ok">已实现</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="warn">
+      ⚠️ <b>唯一的实际短板：Firefox 点「导入整个文件夹」按钮无效</b>（<code>webkitdirectory</code> 未实现）。<br>
+      缓解：拖拽文件夹完全可用。若不打算支持 Firefox，可忽略。
+    </div>
+
+    <h3>移动端</h3>
+    <p>未做适配，也不推荐。界面为宽屏双栏设计，窄屏下左栏折叠为全宽（已有 <code>@media(max-width:900px)</code> 基础响应），但整体操作体验差。</p>
+  </div>
+
+  <!-- 13 -->
+  <div class="card" id="d13">
+    <h2><span class="n">13</span>已知问题与待办</h2>
+
+    <h3>13.1 残留代码（无功能影响，未清理）</h3>
+    <table>
+      <thead><tr><th>位置</th><th>内容</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>约 L547</td><td><code>document.title = elTitle.value;</code></td><td>设置浏览器标签标题。属于已弃用需求（用户明确表示不需要）的半成品，删除无害。</td></tr>
+        <tr><td>约 L587</td><td><code>function folderOf(f){…}</code></td><td><b>死代码</b>，已被 <code>groupKeyOf()</code> 取代，全项目无调用点。</td></tr>
+        <tr><td>约 L1317</td><td><code>elCols &amp;&amp; null;</code></td><td>无副作用的空语句，可删。</td></tr>
+      </tbody>
+    </table>
+    <div class="tip">💡 清理这三处不改变任何行为。若决定保留，请在注释中标注原因，避免后人反复困惑。</div>
+
+    <h3>13.2 潜在风险点</h3>
+    <table>
+      <thead><tr><th>风险</th><th>评估</th></tr></thead>
+      <tbody>
+        <tr><td>参数上限偏宽松（<code>qrH</code> 最大 28cm、gap 最大 10cm）</td><td>会触发 <code>resolveLayout()</code> 自动缩小。已收敛，非 bug。若要收紧可把 max 调小。</td></tr>
+        <tr><td>超大原图（&gt;4000×4000）</td><td>单张编码可能 1~2 秒，用户体验靠进度条缓冲。可考虑先降采样。</td></tr>
+        <tr><td><code>titleBandCm()</code> 的 1.16 近似 vs 实际字形测量</td><td>理论误差 &lt; 1px（300DPI 下约 0.008cm），被取整吸收。已实测一致。</td></tr>
+        <tr><td><code>renderPreview()</code> 空态提前 <code>return</code> 不调 <code>applyZoom()</code></td><td>设计选择，无 canvas 无需缩放。且 <code>applyZoom</code> 首行有判空保护。</td></tr>
+        <tr><td><code>titleGlyphHeight</code> 内局部变量 <code>m</code> 与外部边距 <code>m</code> 同名</td><td>作用域隔离，无实际冲突。可读性问题。</td></tr>
+      </tbody>
+    </table>
+
+    <h3>13.3 可优化方向</h3>
+    <ul>
+      <li>缩略图增量更新（只重绘变化的选中态）</li>
+      <li>导出支持取消（<code>AbortController</code> 风格的标志位）</li>
+      <li>PDF 直接输出（需引入 pdf 库，与"零依赖"冲突，需权衡）</li>
+      <li>二维码内容校验（解码检查是否为有效二维码）</li>
+      <li>参数预设的保存/读取（<code>localStorage</code>）</li>
+    </ul>
+  </div>
+
+  <!-- 14 -->
+  <div class="card" id="d14">
+    <h2><span class="n">14</span>扩展指南</h2>
+
+    <h3>14.1 新增一个排版参数（例：水平居中偏左）</h3>
+    <ol>
+      <li>HTML：在「② 排版参数」加输入框，赋唯一 id。</li>
+      <li>JS 常量/状态：<code>state.params</code> 加字段。</li>
+      <li><code>readParams()</code> 加读取 + <code>clampNum()</code> 范围限制。</li>
+      <li>事件绑定：加入 <code>[elW,elH,…]</code> 数组。</li>
+      <li><b>关键</b>：<code>drawA4()</code> 和 <code>renderFull()</code> <b>两处都要改</b>定位公式。</li>
+      <li>用第 15 节的验证脚本交叉比对两条路径的计算结果。</li>
+    </ol>
+
+    <h3>14.2 新增导出格式（例：JPEG）</h3>
+<pre><code>canvasToBlob(cv, <span class="str">"image/jpeg"</span>, <span class="num">0.92</span>)   <span class="cmt">// 改类型与质量参数</span>
+<span class="cmt">// 注意同步修改 ZIP 条目扩展名 .png → .jpg</span>
+</code></pre>
+    <p>若同时支持两种格式，ZIP 中可能出现同名不同扩展名的条目 —— 现有去重逻辑按完整文件名比对，可正确处理。</p>
+
+    <h3>14.3 修改分组粒度</h3>
+    <p>只改 <code>groupKeyOf()</code> 的返回策略即可，其它逻辑（<code>displayNameOf</code> / 组匹配 / ZIP 命名）会自动适配。改完务必用第 15 节的四场景测试验证。</p>
+
+    <h3>14.4 代码风格约定</h3>
+    <ul>
+      <li>IIFE + <code>"use strict"</code>，不用模块系统</li>
+      <li>DOM 引用统一在顶部 <code>elXxx</code> 批量声明</li>
+      <li>所有数值参数一律 <code>clampNum()</code> 后写入 state</li>
+      <li>不引入外部依赖（除非绝对必要）</li>
+      <li>渲染函数保持"读 state → 输出"的纯函数姿态，不在渲染里改 state</li>
+    </ul>
+  </div>
+
+  <!-- 15 -->
+  <div class="card" id="d15">
+    <h2><span class="n">15</span>调试与自测</h2>
+
+    <h3>15.1 语法检查</h3>
+<pre><code><span class="cmt"># 用 Node 直接解析 &lt;script&gt; 内容</span>
+node -e "
+const fs=require('fs');
+const js=fs.readFileSync('qrcode-a4-layout.html','utf8')
+  .match(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[1];
+try{ new Function(js); console.log('✅ 语法通过'); }
+catch(e){ console.log('❌', e.message); }
+"</code></pre>
+
+    <h3>15.2 排版口径一致性自测</h3>
+    <p>验证"预览 / 缩略图 / 导出"三条路径的 <code>contentTop</code> 是否一致：</p>
+<pre><code><span class="kw">const</span> A4_H_CM=<span class="num">29.7</span>, MARGIN_CM=<span class="num">1</span>, TITLE_TOP_CM=<span class="num">0.6</span>, TITLE_GAP_CM=<span class="num">0.5</span>;
+<span class="kw">const</span> PREVIEW_PX_PER_CM=<span class="num">26</span>, PRINT_DPI=<span class="num">300</span>;
+
+<span class="kw">function</span> contentTopCm(pxPerCm, sizeMM){
+  <span class="kw">const</span> fontPx = (sizeMM/<span class="num">10</span>) * pxPerCm;
+  <span class="kw">const</span> glyph  = fontPx * <span class="num">1.16</span>;              <span class="cmt">// 兜底口径</span>
+  <span class="kw">return</span> TITLE_TOP_CM + glyph/pxPerCm + TITLE_GAP_CM;
+}
+console.log( contentTopCm(PREVIEW_PX_PER_CM, <span class="num">14</span>) );   <span class="cmt">// 预览</span>
+console.log( contentTopCm(<span class="num">3.24</span>, <span class="num">14</span>) );               <span class="cmt">// 缩略图</span>
+console.log( contentTopCm(PRINT_DPI/<span class="num">2.54</span>, <span class="num">14</span>) );    <span class="cmt">// 导出</span>
+<span class="cmt">// 三者应输出同一值 2.724</span></code></pre>
+
+    <h3>15.3 容量公式自测</h3>
+<pre><code><span class="kw">function</span> titleBandCm(sizeMM){ <span class="kw">return</span> <span class="num">0.6</span> + (sizeMM/<span class="num">10</span>)*<span class="num">1.16</span> + <span class="num">0.5</span> - <span class="num">1</span>; }
+<span class="kw">const</span> availH = <span class="num">29.7</span> - <span class="num">2</span> - titleBandCm(<span class="num">14</span>);   <span class="cmt">// 25.976</span>
+<span class="cmt">// 3×3 / gap0.5 → cols=floor((19+0.5)/3.5)=5, rows=floor((25.976+0.5)/3.5)=7 → 35</span></code></pre>
+
+    <h3>15.4 分组逻辑自测（四场景）</h3>
+<pre><code><span class="cmt">// 输入 → 期望 groupKeyOf 输出</span>
+<span class="str">"主/a.png"</span>            → <span class="str">"主"</span>
+<span class="str">"主/子A/b.png"</span>         → <span class="str">"主/子A"</span>
+<span class="str">"主/子A/更深/c.png"</span>    → <span class="str">"主/子A"</span>        <span class="cmt">// 深层并入第一层</span>
+<span class="str">""</span>                    → <span class="str">""</span>              <span class="cmt">// 无路径兜底</span></code></pre>
+
+    <h3>15.5 ZIP 有效性验证</h3>
+<pre><code><span class="cmt"># 用 Node 复现 buildZip 生成文件后，用 Python 校验</span>
+python -c "
+import zipfile
+z = zipfile.ZipFile('test.zip')
+print('testzip:', z.testzip())        # None 表示全部 CRC 通过
+print('names:', z.namelist())         # 检查中文名是否完好
+"</code></pre>
+
+    <h3>15.6 手动回归清单</h3>
+    <ul>
+      <li>☐ 单张图片导入 → 导出 → 解压 PNG 尺寸为 2480×3508</li>
+      <li>☐ 改尺寸/间距 → 横向/纵向数量实时更新</li>
+      <li>☐ 标题开关、位置切顶部/底部、字号滑杆 → 预览同步</li>
+      <li>☐ 多文件夹导入 → 文件列表出现分组表头 → 导出为多个 ZIP</li>
+      <li>☐ 拖拽文件夹 → 分组正确（路径补写生效）</li>
+      <li>☐ 超大尺寸（如 28cm）→ 出现黄色提示，不崩溃</li>
+      <li>☐ 缩放三模式 + 窗口 resize</li>
+      <li>☐ 移除单张 / 清空全部 → 缩略图与统计同步</li>
+    </ul>
+  </div>
+
+  <!-- 16 -->
+  <div class="card" id="d16">
+    <h2><span class="n">16</span>版本与联系</h2>
+    <table>
+      <thead><tr><th>项</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>当前版本</td><td><b>Ver 1.0</b></td></tr>
+        <tr><td>作者</td><td>Yulai</td></tr>
+        <tr><td>E-mail</td><td><a href="mailto:liyulai@qq.com">liyulai@qq.com</a></td></tr>
+        <tr><td>GitHub</td><td><a href="https://github.com/Locallabstide" target="_blank" rel="noopener">https://github.com/Locallabstide</a></td></tr>
+        <tr><td>版权</td><td>Powered by Yulai @2026</td></tr>
+      </tbody>
+    </table>
+
+    <h3>许可说明</h3>
+    <p>本项目为个人工具，默认保留所有权利。如需在其它项目中复用 ZIP 打包器或排版算法，建议先通过上述邮箱联系确认。</p>
+
+    <h3>问题反馈建议</h3>
+    <p>反馈 bug 时，请一并提供：</p>
+    <ul>
+      <li>浏览器名称与版本（如 Chrome 130.0.6723.59）</li>
+      <li>复现步骤（上传了几张图 / 什么参数 / 点了哪个按钮）</li>
+      <li>预期结果 vs 实际结果</li>
+      <li>截图（如果涉及排版错位，截图极有帮助）</li>
+      <li>浏览器控制台（F12 → Console）是否有报错</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    批量二维码排版打印工具 <span class="ver">Ver 1.0</span> &nbsp;·&nbsp; Powered by Yulai @2026 &nbsp;·&nbsp; E-mail：<a href="mailto:liyulai@qq.com">liyulai@qq.com</a> &nbsp;·&nbsp; GitHub：<a href="https://github.com/Locallabstide" target="_blank" rel="noopener">Locallabstide</a>
+  </div>
+
+</div>
+</body>
+</html>
